@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+    <title>MIXIT</title>
+  <style>
+  table {
+    border-collapse: collapse;
+    width: 50%;
+  }
+  
+  th, td {
+    text-align: left;
+    padding: 2px;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #D6EEEE;
+  }
+  .Fformats {
+    background-color: white;
+    color: black;
+    border: 2px solid black;
+    margin: 10px;
+    padding: 10px;
+  }
+  </style>
+  </head>
+  <body>
+  <H1>MIXIT</h1>
+<p>MIXIT is a program that reads various image and stream files of various formats and combines
+them into a single image of the same or different output format according to various
+options provided as parameters on the input and output filenames.
+Each input file is converted and either appended or overlayed to the 
+output file depending on the output file type.
+</p>
+  <p>NOTE: The behavior of this program with respect to filename handling might not be what one is used to.
+  Back in the old days under RT11, VAX/VMS and perhaps even MSDOS, file formats were identified by filetypes. Even today under
+  Windows the filetypes are sometimes hidden (a big mistake if you ask me but nobody has) and used to determine what's expected to be in the file.
+  The user sometimes need not specify a filename including the filetype (extension) where the application might
+  easily deduce the filetype. As a result that same paradigm was programmed into mixit. If no filetype on a filename is provided one will be defaulted and this
+  might not be what the user wants. Just beware. And since this application was first developed under RT11 then again under VAX/VMS, the filetypes and
+  commands and examples shown in this document are in uppercase. If the O/S upon which this application is running respects the case of filenames+filetypes,
+  one must use its rules.
+  </p>
+  <p>A little history of this program. A version of this application was written in PDP-11 assembly in the late 1970's on a computer running RT-11 for
+  the coin-operated video game division of Atari. It continued to be used even after coin-op began using VAX/VMS in the early 1980's. In the late 1980's or early 1990's
+  a new version was started and written in the C language, first for the VAX then later ported to various operating systems in use in the coin-op labs at the time.
+  The C version evolved over time and by 1998 any further changes stopped. By then little need remained for use of this application.
+  What remained of the coin-op division closed up shop in April 2003.
+  </p>
+  <div style="border: 2px solid black;margin:4px;padding: 4px">
+  <em>Note from Dave Shepperd, 8/2022
+  <p>
+  There never were any release notes kept on this application so there is no record of what got changed when. It just is what it is.
+  Although I wrote the RT11 version and I might have also written a version in VAX/VMS assembly too at one point, I don't recall. I did not write this C version but did
+    specify what it should do in order to be compatible with existing .mix files and scripts. Lyle Rains and Jim Petrick wrote this version in 'C'.
+    </p>
+    <p>
+    It always had some annoying bugs (there were workarounds) and recently I got involved in rebuilding some of old Atari coin-op game code (some of which recently
+    released on github) and needed this tool to make ROM/EPROM images to use with MAME. So I visited this code base and fixed a few of the bugs
+    that annoyed me the most. I also removed the code that handled the ELF input format since the sources (just .h files) for that code included items marked with
+    various corporate copyright disallowing distribution. I did take the opportunity to format into HTML the little documentation there was describing how to use MIXIT. I
+    am not a technical writer nor am I good at HTML5 and quickly lose interest in writing technical documents so good luck making sense of anything written here.
+    Feel free to hack this document into something more readable. If you do, please send me a copy.
+  </p>
+  </em>
+  </div>
+	<h3>$ MIXIT [-dvh?] [command_file]</h3>
+
+  <p>where [] indicates optional items.</p>
+  <pre>
+  <b>-?</b> = display a help message.
+  <b>-h</b> = display a help message.
+  <b>-d</b> = set debug mode. It causes lots of messages.
+  <b>-q</b> = unset verbose mode. Quiet mode is the default.
+  <b>-v</b> = set verbose mode. It causes some messages.
+  </pre>
+  <p>
+  If a command_file is provided, all the commands will be taken from it. It has a default filetype of <b>.MIX</b> (or <b>.mix</b>) Otherwise it will
+  prompt for interactive input. The contents of the file is plain text with one command per line the syntax being exactly the same as
+  that for interactive.
+  </p>
+<h2>Filetypes</h2>
+
+<p>The input and output file format is selected by the filename extension
+specified (aka filetype). The following formats are currently supported. Those shown with <b>(I/O)</b> are accepted
+  for both input and output. Those showing <b>(O only)</b> can only be used for output.
+The default filetype (if none specified) for both input and output is .LDA. The
+filetypes, if defaulted, are expected to be lowercase on *nix systems.
+</p>
+  <table>
+    <tr>
+    <th>Extension</th>
+    <th>Type</th>
+    <th>Description</th>
+    </tr>
+    <tr><td>.ROM</td><td>ASCII</td><td>Mixit defined text file (I/O).&nbsp;<a href="#ROM_format">DETAILS</a></td></tr>
+    <tr><td>.ASM</td><td>ASCII</td><td>GNU as or mac68k assembler defined text file (O only).</td></tr>
+    <tr><td>.MAC</td><td>ASCII</td><td>Macxx defined text file (O only)</td></tr>
+    <tr><td>.HEX</td><td>ASCII</td><td>Extended TekHex stream text file (I/O).&nbsp;<a href="#HEX_Format">DETAILS</a></td></tr>
+    <tr><td>.DLD</td><td>ASCII</td><td>Rockwell Technology stream text file (I/O).&nbsp;<a href="#DLD_Format">DETAILS</a></td></tr>
+    <tr><td>.INTEL</td><td>ASCII</td><td>Intel defined stream text file (I/O).&nbsp;<a href="#INTEL_Format">DETAILS</a></td></tr>
+    <tr><td>.MOT</td><td>ASCII</td><td>Motorola defined streadm text file (I/O).&nbsp;<a href="#MOT_Format">DETAILS</a></td></tr>
+    <tr><td>.LDA</td><td>binary</td><td>DEC defined stream of bytes (I/O).&nbsp;<a href="#LDA_Format">DETAILS</a></td></tr>
+    <tr><td>.VLDA</td><td>binary</td><td>Atari defined byte stream (I/O).&nbsp;<a href="#VLDA_Format">DETAILS</a></td></tr>
+    <tr><td>.DIO</td><td>binary</td><td>DataIO defined byte stream (I/O).&nbsp;<a href="#DIO_Format">DETAILS</a></td></tr>
+    <tr><td>.COFF</td><td>binary</td><td>Generic COFF defined byte stream (I/O)</td></tr>
+<!--    <tr><td>.ELF</td><td>binary</td><td>Generic ELF defined byte stream (I/O)</td></tr> -->
+    <tr><td>.CPE</td><td>binary</td><td>Sony Playstation 1 (I/O).&nbsp;<a href="#CPE_Format">DETAILS</a></td></tr>
+    <tr><td>all others</td><td>binary</td><td>256 byte fixed length records (I/O)</td></tr>
+  </table>
+
+<h2>Commands</h2>
+MIXIT is run by a list of commands executed in the order that they are 
+encountered. These commands can come either from the user's terminal or
+from a command file.
+
+<h3 id="OutCmd">OUTPUT command</h3>
+
+<p>
+  The output command must appear before any <a href="#InCmd">INPUT</a> commands. This command 
+specifies the name of the output file and any optional attributes. Each 
+occurance of an <b>OUTPUT</b> command causes <b>MIXIT</b> to clear all buffers and 
+counters in preparation for subsequent <a href="#InCmd">INPUT</a> files.
+</p>
+  <code>OUTPUT filename [/attributes...]</code>
+  <p>
+  The attributes are delimited from the filename and each other either with a <b>/</b> or <b>-</b> (dash) depending on the operating system. For Windows/DOS/RT11/VMS it is <b>/</b>,
+  for the others it is a dash <b>-</b>. A whitespace will be required on systems with the delimiter of dash.
+  </p>
+<h4>Output command attributes</h4>
+<h5>/FILL=x</h5>
+<p>
+Fill specifies a value to use to fill all unused or uninitialised bytes in 
+the output file. The defaut for ASCII and stream binary files is for
+uninitialised bytes to remain uninitialised. The default for image mode 
+files is uninititalised bytes to be set to 0. If the FILL character is 
+specified, all uninitialised bytes in all ouput file types are set to
+that value. The parameter <b>x</b> is assumed to be a HEXADECIMAL number
+but can be expressed as either a decimal or octal number by prefixing a %D or %O to it
+respectively. Only the data bytes residing between the specified low and
+high address limits are filled. Use caution with this option when trying
+to overlay ASCII and binary type files because the fill may overlay
+previously written data. 
+</p>
+<h5>/MODE=x</h5>
+<p>
+Mode specifies the type of output addressing that should be used. It 
+basically specifies whether or not the output load addresses are 
+relative to bytes or to words. Hence the <b>x</b> parameter can be
+  either the text <b>WORD</b> or <b>BYTE</b> (the default). This 
+option should only be used when creating an output file for hardware 
+that is NOT byte addressable. For example, if you had to create an .LDA
+file to be loaded by a 32 bit processor that could only address to the 
+granularity of 32 bit words, you would specify <b>/MODE=WORD/WORD_SIZE=32</b>.
+There would then be 4 bytes of data for each address specified by the
+.LDA file load address argument.
+</p>
+<h5>/WORD_SIZE=n</h5>
+<p>
+Word_size specifies the size of each output word in bits.
+The argument <b>n</b> is assumed to be a DECIMAL number but can be expressed
+as hex or octal by prefixing a %X or %O respectively. The default word 
+size is 8.  It can only resolve to one of (decimal) 8, 16, 24 or 32.
+</p>
+<h5>/GROUP=n</h5>
+<p>
+Group specifies which group of 8 bits (i.e. the byte number) in the word to
+output. This allows you create an output file that only contains every
+<b>nth</b> byte of the input file(s). Useful, for example, when one has to
+seperate the high and low bytes of 16 bit programs into seperate files. 
+This option is only significant for word sizes greater than 8 bits. The
+<b>n</b> is a DECIMAL number indicating the BYTE number relative to 0 in
+  the word to include in the output. For example: <b>/WORD_SIZE=24/GROUP=2</b> would cause 
+only every 3rd byte to be included in the output file. The only valid numbers
+  for <b>n</b> is 0, 1, 2 or 3.
+</p>
+<h5>/RECORD_SIZE=n</h5>
+<p>
+Specifies an alternate output record size. Each output type has a maximum
+length that will not be exceeded regardless of what is specified. The
+defaults and maximums are:
+</p>
+  <table style="width: 20%">
+    <tr>
+    <th>Type</th>
+    <th>Default</th>
+    <th>Maximum</th>
+    </tr>
+    <tr><td>.ROM</td><td>16</td><td>80</td></tr>
+    <tr><td>.ASM</td><td>16</td><td>80</td></tr>
+    <tr><td>.MAC</td><td>16</td><td>80</td></tr>
+    <tr><td>.HEX</td><td>32</td><td>121</td></tr>
+    <tr><td>.DLD</td><td>32</td><td>121</td></tr>
+    <tr><td>.INTEL</td><td>32</td><td>121</td></tr>
+    <tr><td>.MOT</td><td>32</td><td>121</td></tr>
+    <tr><td>.LDA</td><td>249</td><td>512</td></tr>
+    <tr><td>.VLDA</td><td>505</td><td>505</td></tr>
+    <tr><td>.DIO</td><td>256</td><td>256</td></tr>
+    <tr><td>.CPE</td><td>503</td><td>503</td></tr>
+    <tr><td>all others</td><td>256</td><td>512</td></tr>
+  </table>
+<p>
+The <b>n</b> is the DECIMAL length in data bytes to make the output records.
+</p>
+<h5>/ONES_COMPLEMENT</h5>
+<p>
+Ones_compliment specifies that the data bytes are to be 1's complemented as they are
+written to the output file. This option is for custom hardware that needs inverted
+  bits when reading from the PROM/ROM/EPROM.
+</p>
+<h3 id="inCmd">INPUT command</h4>
+<p>
+The input command must appear after an <a href="%outCmd">OUTPUT</a> command has
+  been specified. The <b>INPUT</b> command specifies the filename and attributes
+  of a file to read, reposition and deposit in the output file either by appending
+  or overlaying it. The format is:
+</p>
+	<code><b>INPUT file_name[.type] [/attributes...]</b></code>
+<p>
+where <b>file_name</b> is any filepath and the default filetype <b>.type</b> is .LDA (or .lda depending on the O/S).
+If no attributes are specified, the whole file is used and the position
+in the output file is assumed to be the same as found in the input. 
+(I.e. if the input addresses run from 1000-1FFF, the data will be placed 
+in the output at 1000-1FFF.)
+</p>
+  <h4>Input command attributes</h4>
+<h5>/ADDRESS=sss[:eee[:ooo]]</h5>
+  <p>
+Specifies the range of addresses to input and where to position the data 
+in the output file. The <b>ssss</b> indicates in HEX the starting address,
+  <b>eeee</b> indicates the LAST address to use (i.e. inclusive) and
+  <b>oooo</b> indicates where to position the data in the output file.
+  All arguments can be 32 bit values and can be expressed in decimal or
+  octal by prefixing a %D or %O in front of the number respectively.
+  There is an alternate form for this command:
+  </p>
+	<code><b>/ADDRESS=([START=sss],[END=eee],[OUTPUT=ooo])</b></code>
+  <p>
+  The order of arguments is not significant in the long form.
+  The default <b>ssss</b> in this case is the lowest address found in the file;
+  the default <b>eeee</b> is the highest address found in the file and
+  the default <b>oooo</b> is the place to begin the deposit into the output.
+  </p>
+  <p>
+    Some examples:
+  </p>
+  <pre>
+	INPUT foo.bar <b>/ADD=1800</b>         ;from 1800 to end of file
+	INPUT foo.bar <b>/ADD=1800:18FF</b>    ;256 bytes from 1800 to 18FF
+	INPUT foo.bar <b>/ADDR=1800:1FFF:0</b> ;reposition 2k bytes to 0
+	INPUT foo.bar <b>/ADDR=(ST=8000,EN=FFFF,OUT=7FFF)</b> ;back the whole file up 1 byte
+	INPUT foo.bar <b>/ADDR=(OUT=1000)</b>  ;reposition whole file to 1000
+  </pre>
+<h5>/MODE=x</h5>
+<p>
+Mode specifies the type of input addressing that should be used. It 
+basically specifies whether or not the input load addresses are 
+relative to bytes or to words. Hence the <b>x</b> parameter can be
+  either the text <b>WORD</b> or <b>BYTE</b> (the default). If the
+  input file was created by a system that expected, for example, each
+  MAU (minimum addressable unit) was 32 bits wide, specify <b>/MODE=WORD/WORD_SIZE=32</b>.
+It would mean there would be 4 bytes of data for each address specified by the
+record in the input file.
+</p>
+<h5>/WORD_SIZE=n</h5>
+<p>
+Word_size specifies the size of each input word in bits.
+The argument <b>n</b> is assumed to be a DECIMAL number but can be expressed
+as hex or octal by prefixing a %X or %O respectively. The default word 
+size is 8.  The <b>n</b>parameter can resolve only to one of (decimal) 8, 16, 24 or 32.
+</p>
+<h5>/GROUP=n</h5>
+<p>
+Group specifies which group of 8 bits (i.e. the byte number) in the word to
+output. This allows you create an output file that only contains every
+<b>nth</b> byte of the input file(s). Useful, for example, when one has to
+seperate the high and low bytes of 16 bit programs into seperate files. 
+This option is only significant for word sizes greater than 8 bits. The
+<b>n</b> is a DECIMAL number indicating the BYTE number relative to 0 in
+  the word to include in the output. For example: <b>/WORD_SIZE=24/GROUP=2</b> would cause 
+only every 3rd byte to be included in the output file. The only valid numbers
+  for <b>n</b> are 0, 1, 2 or 3.
+</p>
+<h5>/FILL=x</h5>
+<p>
+Fill specifies a value to use to fill all unused or uninitialised bytes in 
+the output file but only within the lowest and highest addresses found in the
+  specified input file. The defaut for ASCII and stream binary files is for
+uninitialised bytes to remain uninitialised. The default for image mode 
+files is uninititalised bytes to be set to 0. If the FILL character is 
+specified, all uninitialised bytes in all ouput file types are set to
+that value. The parameter <b>x</b> is assumed to be a HEXADECIMAL number
+but can be expressed as either a decimal or octal number by prefixing a %D or %O to it
+respectively. Only the data bytes residing between the specified low and
+high address limits (if any) are filled. Use caution with this option when trying
+to overlay ASCII and binary type files because the fill may overlay
+previously written data. 
+</p>
+<h3 id="hlpCmd">HELP command</h5>
+<p>
+  Point your browser to the <a href="file://mixit.html" target="_blank">MIXIT.HTML</a> file wherever it may be found.
+  </p>
+<h3 id="exitCmd">EXIT</h3>
+  <p>
+Returns control back to the O/S.
+  </p>
+  <p>
+  NOTE: Some stream text output files require a footer to be written after all
+  the normal records have been written. One would be wise to always use EXIT to
+  quit MIXIT instead of Control-C or some other method to quit.
+  </p>
+<div class="Fformats">
+    <h3>Examples</h3>
+    <p>
+  If one wants to program a 27512 with 4 16k blocks of data from 4 
+  seperate files, one might do it this way:
+  </p>
+  <pre>  
+      $MIXIT
+      MIXIT> output eprom0123/fill=ff   ;declare output file
+      MIXIT> input page0/addr=(s:%o100000,e:%o137777,o:0) ;page 0
+      MIXIT> input page1/add=(s:8000,e:bfff,o:4000)	;page 1
+      MIXIT> input page2/add=(s:%d32768,e:%d49151,o:%d32768) ;page 2
+      MIXIT> input page3/add=(s:0,e:3fff,o:c000)      ;page 3
+  </pre>
+  <p>
+  To make an ASCII file from an .LDA file in order to send to legal to 
+  meet their copyright requirements:
+  </p>  
+  <pre>
+      MIXIT> output legal0.rom	;declare output file
+      MIXIT> input  game/add=1800:1fff  ;1 EPROM's worth
+      MIXIT> output legal1.rom
+      MIXIT> input  game/add=2000:27ff  ;1 EPROM's worth
+      etc.
+  </pre>
+  <p>
+  Here is the contents of the alexec.mix file and is what is used to make a set of Tempest ROM images where alexec.hex is what was produced by the Atari linker, LLF:
+  <p>
+  <pre>
+      OUT ROM.N -fill=FF
+      IN  alexec.hex -nosym -addr=3000:3FFF:0
+      OUT ROM.P1 -fill=FF
+      IN  alexec.hex -nosym -addr=9000:9FFF:0
+      OUT ROM.L -fill=FF
+      IN  alexec.hex -nosym -addr=A000:AFFF:0
+      OUT ROM.J1 -fill=FF
+      IN  alexec.hex -nosym -addr=B000:BFFF:0
+      OUT ROM.F1 -fill=FF
+      IN  alexec.hex -nosym -addr=C000:CFFF:0
+      OUT ROM.D1 -fill=FF
+      IN  alexec.hex -nosym -addr=D000:DFFF:0  
+  </pre>
+</div>
+  <div class="Fformats">
+    <h3 id="VLDA_Format">VLDA file format</h3>
+    <p>
+	VLDA - variable length binary records.
+    </p>
+  <p>
+  First byte after count
+	identifes the record type. A value of 0 means the data is
+	binary load data. A value of 13 (decimal) means data is
+	transparent. That is, the text of the record (bytes 1-n)
+	are unspecified and are to be passed through unchanged.
+	This is typically used for symbol data records. All other
+	record types are ignored (these are object file format
+	records which should be irrelavent. For type 0 record,
+	bytes 1-4 are the target memory address and bytes 5-n
+	are the data. I.e.:
+  </p>
+    <pre>
+		Bytes in file increasing this way --->
+		(c0 c1)00 a0 a1 a2 a3 dd ... dd
+		|    |  |  |  |  |  |  |______|___ (count - 5) bytes of data
+		|    |  |  |__|__|__|_____________ Address, least significant byte first
+		|    |  |_________________________ Record type 0
+		|____|____________________________ count of bytes in record (not on VAX)
+    </pre>
+  </div>
+  <div class="Fformats">
+    <h3 id="LDA_Format">LDA file format</h3>
+    <p>
+	LDA - variable length binary stream data. Each record is
+	identified by a leading short of 0001 or 0002 least
+	significant byte first. The next 2 bytes contain the count
+	lsb first. The next 2 bytes (or 4 bytes for type 0002
+	record) contain the target memory load address. There are
+	then n bytes of data followed by a 1 byte checksum. The
+	count includes the sentinel, the count bytes, the address
+	and all the data. It does not include the checksum byte.
+	The checksum is the twos complement of the sum of all the
+	bytes in the record (including the sentinel, count and
+	address) except itself. (NOTE: There is no "system"
+	identified record structure. On the VAX, records are read
+	as fixed length 512 and broken down accordingly. On non-VMS
+	systems, files are simply stream data). I.e.: 
+  </p>
+    <pre>
+	Bytes in file increasing this way --->
+
+	01 00 c0 c1 a0 a1 dd ... dd cs
+	|  |  |  |  |  |  |      |  |__ cksum = -(1+c0+c1+a0+a1+dd...)
+	|  |  |  |  |  |  |______|_____ (count - 6) data bytes
+	|  |  |  |  |__|_______________ target memory load address
+	|  |  |__|_____________________ count of bytes in record
+	|__|___________________________ sentinel (type 1 -> 16 bit address)
+
+	02 00 c0 c1 a0 a1 a2 a3 dd ... dd cs
+	|  |  |  |  |        |  |      |  |__ cksum = -(2+c0+c1+a0+a1+a2+a3+dd...)
+	|  |  |  |  |        |  |______|_____ (count - 8) data bytes
+	|  |  |  |  |________|_______________ target memory load address
+	|  |  |__|___________________________ count of bytes in record
+	|__|_________________________________ sentinel (type 2 -> 32 bit address)
+    </pre>
+  </div>
+  <div class="Fformats">
+    <h3 id="MOT_Format">MOT file format</h3>
+	<p>Motorola S record format.</p>
+  <p>
+	The data is recorded as a series of ASCII records. The format of the
+	records is as follows:
+  </p>
+  <pre>
+	Stccaa...dd...cs
+  </pre>
+    <p>
+	where "S" is the record sentinal, "t" is the record type, "cc" is the
+	count of the number of binary bytes in the record (including address,
+	data and checksum), "aa..." is the multibyte load address of byte 0 in
+	the record, "dd..." is the data and "cs" is the twos compliment 8-bit
+	checksum (adding bytes of all fields after "t" should result in a
+	sum of 0xFF).  All values are expressed in hex and there is 1 ASCII
+	character for each 4 bit nibble.
+  </p>
+    <p>
+		Non-hex characters (whitespace, etc.) is ignored.
+  </p>
+    <pre>
+    Valid record types:
+      0   - block header (ignore)
+      1   - data (16-bit addr)
+      2   - data (24-bit addr)
+      3   - data (32-bit addr)
+      5   - record count for block (ignore)
+      7   - 32-bit block termination (ignore)
+      8   - 24-bit block termination (ignore)
+      9   - 16-bit block termination (ignore)
+    </pre>
+  </div>
+  <div class="Fformats">
+    <h3 id="INTEL_Format">INTEL file format</h3>
+	<p>INTEL format records.</p>
+  <p>
+	The data is recorded as a series of ASCII records. The format of the
+	records is as follows:
+  </p>
+    <pre>
+	:ccaaaattdddd....ddddcs
+  </pre>
+    <p>
+	where ":" is the record sentinal, "cc" is the count of the number of
+	data bytes in the record, "aaaa" is the 16 bit load address of byte
+	0 in the record, "tt" is the record type (00 for data, 01 for
+	termination), "dd" is the byte of data and "cs" is the twos compliment
+	8-bit checksum.
+  </p>
+    <p>
+	All binary bytes in the record are checksumed with 8-bit precision
+	including the count and each byte of the 2 byte load address, and the type
+	field. All values are expressed in hex and there is 1 ASCII character for
+	each 4 bit nibble.
+  </p>
+    <p>
+	Whitespace is ignored, as is text in a record after a '#'
+    </p>
+  </div>
+  <div class="Fformats">
+    <h3 id="DLD_Format">DLD file format</h3>
+    <p>
+	Rockwell 6502 format records.
+    </p>
+  <p>
+	The data is recorded as a series of ASCII records. The format of the
+	records is as follows:
+  </p>
+    <pre>
+	   ;ccaaaadddd...chks
+  </pre>
+    <p>
+	where ";" is the record sentinal, "cc" is the count of the number of binary
+	bytes of data in the record, "aaaa" is the 16 bit load address of byte 0
+	in the record, "dd" are bytes of data and "chks" is the 16-bit checksum
+	of the count, address, and data converted to bytes.
+  </p>
+    <p>
+	All binary bytes in the record are checksumed with 8-bit precision
+	including the count and each byte of the 2 byte load address, and the type
+	field. All values are expressed in hex and there is 1 ASCII character for
+	each 4 bit nibble.
+  </p>
+    <p>
+	Whitespace is ignored.
+    </p>
+  </div>
+  <div class="Fformats">
+    <h3 id="HEX_Format">HEX file format</h3>
+    <p>
+    Extended TEKHEX format records.
+    </p>
+    <p>
+    The data is recorded as a series of ASCII records. The
+    format of the records is as follows:
+    </p>
+    <pre>
+    %cctssvvdddd....dd
+    </pre>
+    <p>
+    where "%" is the record sentinel, "cc" is the count of the
+    number of ascii bytes in the record (excluding the '%'
+    sentinel), "t" is the record type (3 = symbol, 6=data, 8=termination),
+    "ss" is the 8 bit checksum of all the binary nibbles in the
+    record (except the "%" and the "ss" bytes, but including
+    cc and t), "vv" is a variable length field containing the
+    load address of the data byte to follow and "dd" is the data
+    bytes. The variable length field format is: cd...d where
+    "c" is the number of ascii chars that follow (0-F where 0 =
+    16 decimal, 1 = 1, etc.) and "d" is the number to
+    represent. I.e. "3421" expands to hex 0421. The minimum
+    field width is 2 bytes and the maximum is 17 bytes
+    (including the count byte).  All values are expressed in
+    hex and there is 1 ASCII character for each 4 bit nibble.    
+    </p>
+  </div>
+<div class="Fformats">
+  <h3 id="DIO_Format">DIO file format</h3>
+    <pre>
+    Data I/O - Raw data.  There are three formats of DIO data.
+  
+    1)  An initial RUBOUT (FF) character begins the data, followed by 
+    sequential bytes of data starting from address 0.  The data ends at EOF.
+  
+    2)  16-bit mode, where the format is:
+  
+    08,1C,2A,49,08,00,cccc,FF,data...,00,00,ssss
+  
+    where cccc is the 2-byte count of data,
+    and   ssss is the 2-byte checksum.
+  
+    3)  32-bit mode, where the format is:
+  
+    08,1C,3E,6B,08,00,cccccccc,FF,data...,00,00,ssss
+  
+    where cccccccc is the 4-byte count of data,
+    and       ssss is the 2-byte checksum.
+  
+  
+    On the VAX, all the DIO files begin with a CR, then the 15-byte header,
+    etc.
+    </pre>
+</div>
+<div class="Fformats">
+  <h3 id="ROM_format">ROM file format</h3>
+    <pre>
+      This is a file format with the following format:
+    
+      command_line        := [command] ";" comment
+      command             := base_command | set_command | data_command
+    
+      base_command        := ("BASE=" | "BSE=")  hex_value
+      set_command         := "SET"
+      wordsize_command    := "WORDSIZE=" hex_value
+      byte_order_command  := "BIGENDIAN" | "LITTLEENDIAN"
+    
+      data_command        := address_expression "=" data_expression
+    
+      address_expession   := start_address [":" end_address] ["," increment]
+      data_expression     := wild_card_string ["," data_expression]
+    
+      start_address       := wild_card_string
+      end_address         := hex_value | binary_value
+      increment           := hex_value
+    
+      wild_card_string    := wild_hex_string | wild_binary_string
+    
+      wild_hex_string     := wild_hex_digit [wild_hex_string]
+      wild_binary_string  := "'" wild_binary_data
+    
+      wild_binary_data    := wild_binary_digit [wild_binary_data]
+    
+      hex_value           := hex_digit [hex_value]
+      binary_string       := binary_digit [binary_string]
+      binary_value        := "'" binary_string
+    
+      wild_binary_digit   := binary_digit | "X"
+      wild_hex_digit      := hex_digit | "X"
+    
+      binary_digit        := 0|1
+      hex_digit           := 0|1|2|3|4|5|6|7|8|9|A|B|C|D|E|F
+    </pre>
+<p>
+	What does this all mean?  Mostly the file has data_commands.  They
+	define how memory should be filled.  Data gets put in memory starting
+	at start_address, and optionally duplicated through end_address.  If
+	increment is specified, it defines how much to bump the address between
+	data items.  Wildcards allow huge ranges of data to be written with
+	only a few commands.
+</p>
+  <p>
+	Data_expression defines a list of data items to put into memory according
+	to the address expression.  Wildcards here specify 'do not touch' areas
+	that are not written over.  A data_expression that is shorter than the
+	address_expression range will be repeated until the range has been filled.
+</p>
+  <p>
+	Spaces and tabs are ignored anywhere in the line, and anything on the
+	line after a ';' is considered a comment and stripped out prior to 
+	parsing.
+</p>
+  <p> Some simple examples of the contents of a .ROM file:</p>
+  <pre>
+  00=0,1,2,3    ;Sets location 0 through 3 in output to 0,1,2,3
+  04=A,B,C,D    ;Sets location 4 through 7 in output to 0A,0B,0C,0D
+  100=AB,CD,EF  ;Sets location 0x100 through 0x102 to 0xAB, 0xCD, 0xEF
+  20:27=4,5,6   ;Sets location 0x20-0x27 to 4,5,6,4,5,6,4,5
+  40=1,2,X,XX,3 ;Sets 0x40=1, 0x41=1 and 0x44=3 but leaves locations 0x42 and 0x43 unchanged.
+  100='00001111 ;Sets location 0x100 to 0x0F
+  101='xx000xxx ;Sets bits 5,4 and 3 to 0 at location 0x101 but leaves other bits unchanged
+  </pre>
+</div>
+<div class="Fformats">
+    <h3 id="CPE_Format">CPE file format</h3>
+    <pre>
+    CPE - variable length binary stream data as used on the Sony
+      playstation. Each record is identified by a leading byte in the
+      range 0 to 8 indicating the record type. The types are defined
+      as:
+  
+        0 = EOF (End of File)
+        1 = n bytes of data to be loaded at m address.
+          the address (m) is 4 bytes following immediately
+          after the type byte, lsb first (little endian);
+          the count (n) is 4 bytes following immediately
+          after the address, lsb first (little endian);
+          the data follows immediately after the count.
+        2 = xfer address. 4 bytes, lsb first, follows immediately
+          after the type byte.
+        3 = set register n to long value v. Register number is 2 bytes,
+          lsb first, following immediately after the type byte;
+          value (v) is 4 bytes, lsb first, following immediately
+          after the register number.
+        4 = set register n to word value v. Register number is 2 bytes,
+          lsb first, following immediately after the type byte;
+          value (v) is 2 bytes, lsb first, following immediately
+          after the register number.
+        5 = set register n to byte value v. Register number is 2 bytes,
+          lsb first, following immediately after the type byte;
+          value (v) is 1 byte following immediately after the
+          register number.
+        6 = set register n to 3-byte value v. Register number is 2 bytes,
+          lsb first, following immediately after the type byte;
+          value (v) is 3 bytes, lsb first, following immediately
+          after the register number.
+        7 = workspace address is 4 bytes, lsb first, following immediately
+          after the type byte.
+        8 = unit number is 1 byte following immediately after the type
+          byte.
+    </pre>
+</div>
+</body>
+</html>
+

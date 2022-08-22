@@ -1,0 +1,232 @@
+{\rtf1\ansi \deff8\deflang1033{\fonttbl{\f5\fswiss\fcharset0\fprq2 Arial;}{\f8\froman\fcharset0\fprq2 Times;}}{\colortbl;\red0\green0\blue0;\red0\green0\blue255;\red0\green255\blue255;\red0\green255\blue0;
+\red255\green0\blue255;\red255\green0\blue0;\red255\green255\blue0;\red255\green255\blue255;\red0\green0\blue128;\red0\green128\blue128;\red0\green128\blue0;\red128\green0\blue128;\red128\green0\blue0;\red128\green128\blue0;\red128\green128\blue128;
+\red192\green192\blue192;}{\stylesheet{\f8 \snext0 Normal;}{\s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \sbasedon0\snext0 heading 1;}{\*\cs10 \additive Default Paragraph Font;}{\s15 \f8\fs20 \sbasedon0\snext15 footnote text;}{\*\cs16 \additive\super 
+\sbasedon10 footnote reference;}}{\info{\creatim\yr1994\mo2\dy16\hr17\min42}{\version1}{\edmins44}{\nofpages0}{\nofwords0}{\nofchars0}{\vern49197}}\widowctrl\ftnbj\aenddoc\noextrasprl\prcolbl\cvmme\sprsspbf\brkfrm\swpbdr\hyphcaps0 \fet0\sectd 
+\linex0\endnhere {\*\pnseclvl1\pnucrm\pnstart1\pnindent720\pnhang{\pntxta .}}{\*\pnseclvl2\pnucltr\pnstart1\pnindent720\pnhang{\pntxta .}}{\*\pnseclvl3\pndec\pnstart1\pnindent720\pnhang{\pntxta .}}{\*\pnseclvl4\pnlcltr\pnstart1\pnindent720\pnhang
+{\pntxta )}}{\*\pnseclvl5\pndec\pnstart1\pnindent720\pnhang{\pntxtb (}{\pntxta )}}{\*\pnseclvl6\pnlcltr\pnstart1\pnindent720\pnhang{\pntxtb (}{\pntxta )}}{\*\pnseclvl7\pnlcrm\pnstart1\pnindent720\pnhang{\pntxtb (}{\pntxta )}}{\*\pnseclvl8
+\pnlcltr\pnstart1\pnindent720\pnhang{\pntxtb (}{\pntxta )}}{\*\pnseclvl9\pnlcrm\pnstart1\pnindent720\pnhang{\pntxtb (}{\pntxta )}}\pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $}
+ MIXIT}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} MixitUtil}} {\cs16\super K{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super K} mixit;utility}} MIXIT
+\par \pard\plain \f8 
+\par 
+\par Program that reads image (.xxx), .ROM, .LDA, .DLD, .HEX and .EXE files and converts them to image (.xxx), .ROM, .LDA, .DLD, .HEX, .MAC, DIO or .EXE files while repositioning and/or rearranging the data. This allows a user to just convert a bi
+nary loadable file to an ASCII file or visa-versa or to merge two or more binary/ASCII files together such that the text contained within the files will not overlay each other in the merged file. 
+\par 
+\par \tab  MIXIT [command_file_name]
+\par 
+\par Each input file is converted and either appended or overlayed to the output file depending on the output file type.
+\par 
+\par {\uldb Commands}{\v mixitcmds}
+\par {\uldb Examples}{\v mixitexamples}
+\par {\uldb filenames}{\v mixitfile}
+\par {\uldb parameters}{\v mixitparms}
+\par 
+\par 
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} parameters}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitparms}} parameters
+\par \pard\plain \f8 
+\par \pard An optional file that contains the list of commands. It must be an ASCII file with syntax exactly the same as the interactive commands. Type help commands for details. The default filename extension for the command file is .MIX.
+\par \pard 
+\par 
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} filenames}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitfile}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit filenames}} filenames
+\par \pard\plain \f8 
+\par \pard The input and output file format is selected by the filename extension specified. The following formats are currently supported for either input or output. The default for both input and output is .LDA.
+\par \pard 
+\par \tab Extension\tab type\tab Description
+\par \tab ---------\tab -----\tab ------------
+\par \tab .ROM\tab \tab ASCII\tab EPROM generation file
+\par \tab .MAC\tab \tab ASCII\tab Assembler format (output only)
+\par \tab .DLD\tab \tab ASCII\tab stream mode ascii load file format
+\par \tab .HEX\tab \tab ASCII\tab stream mode ascii (TEKHEX) load file format
+\par \tab .LDA\tab \tab binary\tab stream mode binary records
+\par \tab .EXE\tab \tab binary\tab binary image (VMS images)
+\par \tab all others\tab image\tab fix length 512 byte records
+\par 
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} Commands}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitcmds}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit commands}} Commands
+\par \pard\plain \f8 
+\par \pard 
+\par \pard MIXIT is run by a list of commands executed in the order that they are encountered. These commands can come either from the user's terminal or from a command file.
+\par \pard 
+\par 
+\par \pard {\uldb OUTPUT}{\v mixitOUTPUT}
+\par {\uldb INPUT}{\v mixitINPUT}
+\par {\uldb HELP}{\v mixitHELP}
+\par {\uldb EXIT}{\v mixitEXIT}
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} OUTPUT}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitOUTPUT}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit commands}} OUTPUT
+\par \pard\plain \f8 
+\par \pard 
+\par \pard The ou
+tput command must appear before any INPUT commands. This command specifies the name of the output file and any optional attributes. Each occurance of an OUTPUT command causes MIXIT to clear all buffers and counters in preparation for subsequent INPUT file
+s.
+\par \pard 
+\par \tab OUTPUT filename [/attributes...]
+\par 
+\par attributes:
+\par {\uldb 
+\par }\pard {\uldb /FILL}{\v mixitFILL}
+\par {\uldb /MODE}{\v mixitMODE}
+\par {\uldb /WORD_SIZE}{\v mixitWORD_SIZE}
+\par {\uldb /GROUP}{\v mixitGROUP}
+\par {\uldb /RECORD_SIZE}{\v mixitRECORD_SIZE}
+\par {\uldb /ONES_COMPLEMENT}{\v mixitONES}
+\par \pard {\uldb /NOPAD}{\v mixitNOPAD}
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /NOPAD}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitNOPAD}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit OUTPUT /NOPAD}} /NOPAD
+\par \pard\plain \f8 
+\par /NOPAD 
+\par 
+\par If one specifies an address range that is greater than the contents of the input file, image and .DIO files will be padded (with the "fill" character; see {\uldb /FILL}{\v mixitFILL}) to the specified size. Sometimes this 
+action is not desired and one really wants the output file to be the smaller of the input file or the address range specified. The /NOPAD option forces this action.
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /FILL}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitFILL}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit OUTPUT /FILL}} /FILL
+\par \pard\plain \f8 
+\par \pard Specifies a value to use to fill all unused or uninitialised by
+tes in the output file. The defaut for ASCII and binary files is for uninitialised bytes to remain uninitialised. The default for image mode files is uninititalised bytes to be set to 0. If the FILL character is specified, all uninitialised bytes in all o
+uput file types are set to that value. The format is 
+\par \pard 
+\par \tab /FILL=x
+\par 
+\par \pard where x is assumed to be a HEXADECIMAL number but can be expressed as either a decimal or octal number by prefixing a %D or %O to it respectively. Only the data bytes residing between the spec
+ified low and high address limits are filled. Use caution with this option when trying to overlay ASCII and binary type files because the fill may overlay previously written data. 
+\par \pard 
+\par 
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /MODE}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitMODE}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit OUTPUT /MODE}} /MODE
+\par \pard\plain \f8 
+\par \pard specifies the type of output addressing that should be used. It basically specifies whether or not the output load addresses are relative to bytes or to words. Hence the format of this option is:
+\par \pard 
+\par \tab /MODE=xxx
+\par 
+\par \pard where xxx can be either WORD or BYTE (the default). This option should only be used when creating an outpu
+t file for hardware that is NOT byte addressable. For example, if you had to create an .LDA file to be loaded by a 32 bit processor that could only address to the granularity of 32 bit words, you would specify /MOD=WORD {\uldb /WORD_SIZE}{\v 
+mixitWORD_SIZE} =32. There would then be 4 bytes of data for each address specified by the .LDA file load address argument.
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /WORD_SIZE}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitWORD_SIZE}} /WORD_SIZE
+\par \pard\plain \f8 
+\par \pard Word size specifies the size of each output word in bits. It must be a multiple of 8.
+\par 
+\par \tab /WORD_SIZE=n
+\par 
+\par \pard The argument "n" is assumed to be a DECIMAL number but can be expressed as hex or octal by prefixing a %X or %O respectively. The default word size is 8.
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /GROUP}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitGROUP}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit OUTPUT /GROUP}} /GROUP
+\par \pard\plain \f8 
+\par \pard 
+Specifies which group of 8 bits (i.e. the byte number) in the word to output. This allows you create an output file that only contains every "nth" byte of the input file(s). Useful, for example, when one has to seperate the high and low bytes of 16 bit pr
+ograms into seperate files. This option is only significant for word sizes greater than 8 bits. The format is: 
+\par \pard 
+\par \tab /GROUP=xxx
+\par 
+\par \pard where xxx is a DECIMAL number indicating the BYTE number in the word to include in the output. For example: {\uldb /WORD_SIZE}{\v mixitWORD_SIZE} =24 /GROUP=2 would cause only every 3rd byte to be included in the output file. 
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /RECORD_SIZE}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitRECORD_SIZE}} {\cs16\super K{\footnote 
+\pard\plain \s15 \f8\fs20 {\cs16\super K} mixit OUTPUT /RECORD_SIZE}} /RECORD_SIZE
+\par \pard\plain \f8 
+\par \pard Specifies an alternate output record size. Each output type has a maximum length that will not be exceeded regardless of what is specified. The defaults and maximums are:
+\par \pard 
+\par \trowd \trgaph108\trleft-108 \cellx1170\cellx2430\cellx8748 \pard \intbl {\b Type\cell }\pard \intbl {\b default\cell }\pard \intbl {\b max\cell }\pard \intbl \row \trowd \trgaph108\trleft-108 \cellx1170\cellx2430\cellx8748 \pard \intbl .LDA\cell \pard 
+\intbl 249\cell \pard \intbl 505      default makes 256 byte records\cell \pard \intbl \row \pard \intbl .ROM\tab \cell \pard \intbl 16\cell \pard \intbl 80        max produces 255 byte records\cell \pard \intbl \row \pard \intbl .MAC\cell \pard \intbl 16
+\cell \pard \intbl 80\cell \pard \intbl \row \pard \intbl .DLD\cell \pard \intbl 32\cell \pard \intbl 121\cell \pard \intbl \row \trowd \trgaph108\trleft-108 \cellx1170\cellx2430\cellx8748 \pard \intbl .HEX\cell \pard \intbl 32\cell \pard \intbl 121\cell 
+\pard \intbl \row \pard 
+\par \pard The syntax of the option is:
+\par 
+\par \tab /RECORD_SIZE=xx
+\par 
+\par where xx is the DECIMAL length in data bytes to make the output records.
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /ONES_COMPLEMENT}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitONES}} {\cs16\super K{\footnote 
+\pard\plain \s15 \f8\fs20 {\cs16\super K} mixit OUTPUT /ONES_COMPLEMENT}} /ONES_COMPLEMENT
+\par \pard\plain \f8 
+\par \pard Specifies that the data bytes are to be 1's complemented as they are written to the output file.
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} INPUT}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitINPUT}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit commands}} INPUT
+\par \pard\plain \f8 
+\par \pard Specifies the filename and attributes of a file to read, reposition and deposit in the output file either by appending or overlaying it. The format is:
+\par \pard 
+\par \tab INPUT file_name[.type] [/attributes...]
+\par 
+\par \pard where "file_name" is any VMS filename and 
+the default ".type" is .LDA. If no attributes are specified, the whole file is used and the position in the output file is assumed to be the same as found in the input. (I.e. if the input addresses run from 1000-1FFF, the data will be placed in the output
+ at 1000-1FFF.>
+\par \pard 
+\par attributes:
+\par 
+\par \pard {\uldb /ADDRESS}{\v mixitADDRESS}
+\par {\uldb /WORD_SIZE}{\v mixitWORD_SIZEin}
+\par {\uldb /MODE}{\v mixitMODEin}
+\par {\uldb /FILL}{\v mixitFILLin}
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /ADDRESS}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitADDRESS}} {\cs16\super K{\footnote 
+\pard\plain \s15 \f8\fs20 {\cs16\super K} mixit INPUT /ADDRESS}} /ADDRESS
+\par \pard\plain \f8 
+\par \pard Specifies the range of addresses to input and where to position the data in the output file. There are two formats:
+\par \pard 
+\par \tab /ADDRESS=ssss[:eeee[:oooo]]\tab \tab     !short hand
+\par \tab /ADDRESS=([START=ssss],[END=eeee],[OUTPUT=oooo])  !long hand
+\par 
+\par \pard 
+where "ssss" indicates in HEX the starting address, "eeee" indicates the LAST address to use (i.e. inclusive) and "oooo" indicates where to position the data in the output file. All arguments can be 31 bit values and can be expressed in decimal or octal b
+y prefixing a %D or %O in front of the number respectively. The order of arguments is not significant in the long form. The default "ssss" is the lowest addres
+s found in the file; the default "eeee" is the highest address found in the file and the default "oooo" is the start_address. Examples:
+\par \pard 
+\par \tab /ADD=1800\tab \tab \tab !from 1800 to end of file
+\par \tab /ADD=1800:18FF\tab \tab !256 bytes from 1800 to 18FF
+\par \tab /ADDR=1800:1FFF:0\tab \tab !reposition 2k bytes to 0
+\par \tab /ADDR=(ST=8000,EN=FFFF,OUT=7FFF) !back the whole file up 1 byte
+\par \tab /ADDR=(OUT=1000)\tab !reposition whole file to 1000
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /WORD_SIZE}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitWORD_SIZEin}} {\cs16\super K{\footnote 
+\pard\plain \s15 \f8\fs20 {\cs16\super K} mixit INPUT /WORD_SIZE}} /WORD_SIZE
+\par \pard\plain \f8 
+\par \pard Word size specifies the size of each output word in bits. It must be a multiple of 8.
+\par 
+\par \tab /WORD_SIZE=n
+\par 
+\par The argument "n" is assumed to be a DECIMAL number but can be expressed as hex or octal by prefixing a %X or %O respectively. The default word size is 8.
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /MODE}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitMODEin}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit INPUT /MODE}} /MODE
+\par \pard\plain \f8 
+\par \pard Specifies the type of output addressing that should be used. It basically specifies whether or not the output load addresses are relative to bytes or to words. Hence the format of this option is:
+\par 
+\par \tab /MODE=xxx
+\par 
+\par where xxx can be either WORD or BYTE (the default). This option should only be used when creating an output file for hardware that is NOT byte addressable. For example, if you had to create an .LDA 
+file to be loaded by a 32 bit processor that could only address to the granularity of 32 bit words, you would specify MODE=WORD {\uldb /WORD_SIZE}{\v mixitWORD_SIZEin} =32. There would then be 4 bytes of data for each address specified by the 
+.LDA file load address argument.
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} /FILL}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitFILLin}} {\cs16\super K{\footnote \pard\plain 
+\s15 \f8\fs20 {\cs16\super K} mixit INPUT /FILL}} /FILL
+\par \pard\plain \f8 
+\par \pard Specifies a value to use to fill all unused or uninitialised bytes in the output file. The defaut for ASCII and binary files is for uninitialised bytes to remain uninitialised. The default for image mode 
+files is uninititalised bytes to be set to 0. If the FILL character is specified, all uninitialised bytes in all ouput file types are set to that value. The format is 
+\par 
+\par \tab /FILL=x
+\par 
+\par where x is assumed to be a HEXADECIMAL number but can be expressed as either a decimal or octal number by prefixing a %D or %O to it respectively. Only the data bytes residing between the specified low and 
+high address limits are filled. Use caution with this option when trying to overlay ASCII and binary type files because the fill may overlay previously written data. This command overrides the /FILL on output only for this input file.
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} HELP}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitHELP}} {\cs16\super K{\footnote \pard\plain \s15 
+\f8\fs20 {\cs16\super K} mixit commands}} HELP
+\par \pard\plain \f8 
+\par \pard Not implemented in NT version.
+\par 
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} EXIT}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitEXIT}} {\cs16\super K{\footnote \pard\plain \s15 
+\f8\fs20 {\cs16\super K} mixit commands}} EXIT
+\par \pard\plain \f8 
+\par \pard Returns control back to the operating system.
+\par 
+\par \pard\plain \s1\sb240\sa60\keepn \b\f5\fs28\kerning28 \page {\cs16\super ${\footnote \pard\plain \s15 \f8\fs20 {\cs16\super $} Examples}} {\cs16\super #{\footnote \pard\plain \s15 \f8\fs20 {\cs16\super #} mixitexamples}} {\cs16\super K{\footnote 
+\pard\plain \s15 \f8\fs20 {\cs16\super K} mixit examples}} Examples
+\par \pard\plain \f8 
+\par \pard If one wants to program a 27512 with 4 16k blocks of data from 4 seperate files, one might do it this way:
+\par 
+\par \tab $MIXIT
+\par \tab MIXIT> output eprom0123/fill=ff   !declare output file
+\par \tab MIXIT> input page0/addr=(s:%o100000,e:%o137777,o:0) !page 0
+\par \tab MIXIT> input page1/add=(s:8000,e:bfff,o:4000)\tab !page 1
+\par \tab MIXIT> input page2/add=(s:%d32768,e:%d49151,o:%d32768) !page 2
+\par \tab MIXIT> input page3/add=(s:0,e:3fff,o:c000)      !page 3
+\par 
+\par To make an ASCII file from an .LDA file in order to send to legal to meet their copyright requirements:
+\par 
+\par \tab MIXIT> output legal0.rom\tab !declare output file
+\par \tab MIXIT> input  game/add=1800:1fff  !1 EPROM's worth
+\par \tab MIXIT> output legal1.rom
+\par \tab MIXIT> input  game/add=2000:27ff  !1 EPROM's worth
+\par \tab etc.
+\par 
+\par }

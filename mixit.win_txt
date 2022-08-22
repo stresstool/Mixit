@@ -1,0 +1,258 @@
+1 MIXIT
+Program that reads image (.xxx), .ROM, .LDA, .DLD, .HEX and .EXE files and
+converts them to image (.xxx), .ROM, .LDA, .DLD, .HEX, .MAC or .EXE files while
+repositioning and/or rearranging the data. This allows a user to just convert a
+binary loadable file to an ASCII file or visa-versa or to merge two or more
+binary/ASCII files together such that the text contained within the files will
+not overlay each other in the merged file. 
+
+	$ MIXIT [-dvh?] [command_file_name]
+
+Each input file is converted and either appended or overlayed to the 
+output file depending on the output file type.
+
+1 parameters
+
+An optional list of command line options:
+  -d = set debug mode. It causes lots of messages.
+  -v = set verbose mode. It causes some messages.
+  -h = display a help message.
+  -? = display a help message.
+  
+An optional file that contains the list of commands. It must be an ASCII
+file with the command syntax exactly the same as the interactive commands.
+Type help commands for details. The default filename extension for the
+command file is .MIX (or .mix on *nix systems).
+
+1 filenames
+
+The input and output file format is selected by the filename extension
+specified. The following formats are currently supported for either
+input or output. The default for both input and output is .LDA. The
+filetypes are expected to be lowercase on *nix systems.
+
+	Extension	type	Description
+	---------	-----	------------
+	.ROM		ASCII	Mixit defined text file (I/O)
+	.ASM		ASCII	GNU as or mac68k assembler defined text file (O only)
+	.MAC		ASCII	Macxx defined text file (O only)
+	.HEX		ASCII	Extended TekHex stream text file (I/O)
+	.DLD		ASCII	Rockwell Technology stream text file (I/O)
+	.INTEL		ASCII	Intel defined stream text file (I/O)
+	.MOT		ASCII	Motorola defined streadm text file (I/O)
+	.LDA		binary	DEC defined stream of bytes (I/O)
+	.VLDA		binary	Atari defined byte stream (I/O)
+	.DIO		binary	DataIO defined byte stream (I/O)
+	.COFF		binary	Generic COFF defined byte stream (I/O)
+	.ELF		binary	Generic ELF defined byte stream (I/O)
+	.CPE		binary	Sony Playstation 1 (I/O)
+  all others	binary	fix length records
+
+1 Commands
+MIXIT is run by a list of commands executed in the order that they are 
+encountered. These commands can come either from the user's terminal or
+from a command file.
+
+2 OUTPUT
+
+The output command must appear before any INPUT commands. This command 
+specifies the name of the output file and any optional attributes. Each 
+occurance of an OUTPUT command causes MIXIT to clear all buffers and 
+counters in preparation for subsequent INPUT files.
+
+	OUTPUT filename [/attributes...]
+
+3 attributes
+/FILL
+
+Specifies a value to use to fill all unused or uninitialised bytes in 
+the output file. The defaut for ASCII and binary files is for
+uninitialised bytes to remain uninitialised. The default for image mode 
+files is uninititalised bytes to be set to 0. If the FILL character is 
+specified, all uninitialised bytes in all ouput file types are set to
+that value. The format is 
+
+	/FILL=x
+
+where x is assumed to be a HEXADECIMAL number but can be expressed as
+either a decimal or octal number by prefixing a %D or %O to it
+respectively. Only the data bytes residing between the specified low and
+high address limits are filled. Use caution with this option when trying
+to overlay ASCII and binary type files because the fill may overlay
+previously written data. 
+
+/MODE
+
+specifies the type of output addressing that should be used. It 
+basically specifies whether or not the output load addresses are 
+relative to bytes or to words. Hence the format of this option is:
+
+	/MODE=xxx
+
+where xxx can be either WORD or BYTE (the default). This 
+option should only be used when creating an output file for hardware 
+that is NOT byte addressable. For example, if you had to create an .LDA
+file to be loaded by a 32 bit processor that could only address to the 
+granularity of 32 bit words, you would specify /MODE=WORD/WORD_SIZE=32.
+There would then be 4 bytes of data for each address specified by the
+.LDA file load address argument.
+
+/WORD_SIZE
+
+Word size specifies the size of each output word in bits. It must be a 
+multiple of 8.
+
+	/WORD_SIZE=n
+
+The argument "n" is assumed to be a DECIMAL number but can be expressed
+as hex or octal by prefixing a %X or %O respectively. The default word 
+size is 8.
+
+/GROUP
+
+Specifies which group of 8 bits (i.e. the byte number) in the word to
+output. This allows you create an output file that only contains every
+"nth" byte of the input file(s). Useful, for example, when one has to
+seperate the high and low bytes of 16 bit programs into seperate files. 
+This option is only significant for word sizes greater than 8 bits. The
+format is: 
+
+	/GROUP=xxx
+
+where xxx is a DECIMAL number indicating the BYTE number in the word to 
+include in the output. For example: /WORD_SIZE=24/GROUP=2 would cause 
+only every 3rd byte to be included in the output file.
+
+/RECORD_SIZE
+
+Specifies an alternate output record size. Each output type has a maximum
+length that will not be exceeded regardless of what is specified. The
+defaults and maximums are:
+
+	Type    default    max
+	.LDA	249        505      default makes 256 byte records      
+	.ROM	16          80      max produces 255 byte records
+	.MAC    16          80                 "
+	.DLD    32         121                 "
+	.HEX    32         121                 "
+
+The syntax of the option is:
+
+	/RECORD_SIZE=xx
+
+where xx is the DECIMAL length in data bytes to make the output records.
+
+/ONES_COMPLEMENT
+
+Specifies that the data bytes are to be 1's complemented as they are
+written to the output file.
+
+2 INPUT
+
+Specifies the filename and attributes of a file to read, reposition and 
+deposit in the output file either by appending or overlaying it. The 
+format is:
+
+	INPUT file_name[.type] [/attributes...]
+
+where "file_name" is any VMS filename and the default ".type" is .LDA.
+If no attributes are specified, the whole file is used and the position
+in the output file is assumed to be the same as found in the input. 
+(I.e. if the input addresses run from 1000-1FFF, the data will be placed 
+in the output at 1000-1FFF.>
+
+3 attributes
+
+/ADDRESS
+Specifies the range of addresses to input and where to position the data 
+in the output file. There are two formats:
+
+	/ADDRESS=ssss[:eeee[:oooo]]		    !short hand
+	/ADDRESS=([START=ssss],[END=eeee],[OUTPUT=oooo])  !long hand
+
+where "ssss" indicates in HEX the starting address, "eeee" indicates the 
+LAST address to use (i.e. inclusive) and "oooo" indicates where to 
+position the data in the output file. All arguments can be 31 bit values 
+and can be expressed in decimal or octal by prefixing a %D or %O in 
+front of the number respectively. The order of arguments is not 
+significant in the long form. The default "ssss" is the lowest address 
+found in the file; the default "eeee" is the highest address found in 
+the file and the default "oooo" is the start_address. Examples:
+
+	/ADD=1800		!from 1800 to end of file
+	/ADD=1800:18FF		!256 bytes from 1800 to 18FF
+	/ADDR=1800:1FFF:0	!reposition 2k bytes to 0
+	/ADDR=(ST=8000,EN=FFFF,OUT=7FFF) !back the whole file up 1 byte
+	/ADDR=(OUT=1000)	!reposition whole file to 1000
+
+/WORD_SIZE
+
+Word size specifies the size of each output word in bits. It must be a 
+multiple of 8.
+
+	/WORD_SIZE=n
+
+The argument "n" is assumed to be a DECIMAL number but can be expressed
+as hex or octal by prefixing a %X or %O respectively. The default word 
+size is 8.
+
+/MODE
+
+specifies the type of output addressing that should be used. It 
+basically specifies whether or not the output load addresses are 
+relative to bytes or to words. Hence the format of this option is:
+
+	/MODE=xxx
+
+where xxx can be either WORD or BYTE (the default). This 
+option should only be used when creating an output file for hardware 
+that is NOT byte addressable. For example, if you had to create an .LDA
+file to be loaded by a 32 bit processor that could only address to the 
+granularity of 32 bit words, you would specify /MODE=WORD/WORD_SIZE=32.
+There would then be 4 bytes of data for each address specified by the
+.LDA file load address argument.
+
+/FILL
+
+Specifies a value to use to fill all unused or uninitialised bytes in 
+the output file. The defaut for ASCII and binary files is for
+uninitialised bytes to remain uninitialised. The default for image mode 
+files is uninititalised bytes to be set to 0. If the FILL character is 
+specified, all uninitialised bytes in all ouput file types are set to
+that value. The format is 
+
+	/FILL=x
+
+where x is assumed to be a HEXADECIMAL number but can be expressed as
+either a decimal or octal number by prefixing a %D or %O to it
+respectively. Only the data bytes residing between the specified low and
+high address limits are filled. Use caution with this option when trying
+to overlay ASCII and binary type files because the fill may overlay
+previously written data. This command overrides the /FILL on output 
+only for this input file.
+
+2 HELP
+Displays this text.
+
+2 EXIT
+returns control back to VMS.
+
+1 Examples
+If one wants to program a 27512 with 4 16k blocks of data from 4 
+seperate files, one might do it this way:
+
+	$MIXIT
+	MIXIT> output eprom0123/fill=ff   !declare output file
+	MIXIT> input page0/addr=(s:%o100000,e:%o137777,o:0) !page 0
+	MIXIT> input page1/add=(s:8000,e:bfff,o:4000)	!page 1
+	MIXIT> input page2/add=(s:%d32768,e:%d49151,o:%d32768) !page 2
+	MIXIT> input page3/add=(s:0,e:3fff,o:c000)      !page 3
+
+To make an ASCII file from an .LDA file in order to send to legal to 
+meet their copyright requirements:
+
+	MIXIT> output legal0.rom	!declare output file
+	MIXIT> input  game/add=1800:1fff  !1 EPROM's worth
+	MIXIT> output legal1.rom
+	MIXIT> input  game/add=2000:27ff  !1 EPROM's worth
+	etc.
