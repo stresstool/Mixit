@@ -30,95 +30,6 @@ extern int fileno();        /* non-ANSI */
 #define DEFAULT_BUFLEN      0x1000
 
 /*==========================================================================*
- *  group_data  - Handles the /GROUP option by copying a source array to a 
- *                destination array, but only copying the GROUP'ed bytes.
- *==========================================================================*/
-static void group_data(uchar *dest, uchar *src, int count,
-					   int bytes_per_word, int group_code)
-{
-	register int i;
-
-#if 0
-	src += bytes_per_word - group_code - 1;     /* For MSB -> LSB data machines */
-#else
-	src += group_code;                          /* For LSB -> MSB data */
-#endif
-
-	for ( i = 0; i < count; i += bytes_per_word )
-	{
-		*dest++ = *src;
-		src += bytes_per_word;
-	}
-
-} /* end group_data */
-
-
-/*==========================================================================*
- *  swap_data   - Handles the /SWAP option by swapping bytes in the given 
- *                array governed by bytes_per_word.
- *==========================================================================*/
-static void swap_data(uchar *dest, int count, int bytes_per_word)
-{
-	register int i, j;
-	uchar       temp;
-
-	if ( count % bytes_per_word )
-	{
-		moan("Can't swap %d byte words in a %d byte record", bytes_per_word,
-			 count);
-		return;
-	}
-
-	while ( count > 0 )
-	{
-		j = bytes_per_word - 1;
-		for ( i = 0; i < bytes_per_word / 2; ++i, --j )
-		{
-			temp    = dest[i];
-			dest[i] = dest[j];
-			dest[j] = temp;
-		}
-		count -= bytes_per_word;
-		dest  += bytes_per_word;
-	}
-
-} /* end swap_data */
-
-/*==========================================================================*
- *  evenodd_data  - Handles the /EVEN_WORDS and /ODD_WORDS options by copying
- *		  a source array to a destination array, but only copying the
- *		  half of the words.
- *==========================================================================*/
-static void evenodd_data(uchar *dest, uchar *src, int count, short bytes_per_word, int odd)
-{
-	register int ii, half;
-
-	half = bytes_per_word / 2;
-	if ( half == 0 )
-	{
-		moan("Can't take even/odd %d byte words from a %d byte word", half, bytes_per_word);
-		return;
-	}
-
-	if ( count % bytes_per_word )
-	{
-		moan("Can't take (%d byte) words from a %d byte record", half, count);
-		return;
-	}
-
-	if ( odd )
-		src += half;
-	for ( ii = 0; ii < count; ii += bytes_per_word )
-	{
-		memcpy(dest, src, half);
-		dest += half;
-		src += bytes_per_word;
-	}
-
-} /* end evenodd_data */
-
-
-/*==========================================================================*
  *  save_data   - Deposits a record into an image after munging it based on
  *                various flag settings.
  *==========================================================================*/
@@ -143,30 +54,6 @@ void save_data(InRecord *rec, LogicalAddr userLo, LogicalAddr userHi, long reloc
 		}
 		return;
 	}
-	if ( !rec->beenConverted )
-	{
-		rec->recConvertedLen = rec->recLen;
-		/* Mung the entire input buffer according to the flags */
-		/* NOTE: If we know we might revisit this record, then convert it into a separate buffer */
-		if ( (gpf->flags & GPF_M_GROUP) != 0 )
-		{
-			group_data(rec->recData, rec->recData, rec->recLen,
-					   gpf->bytes_per_word, gpf->group_code);
-			rec->recConvertedLen /= gpf->bytes_per_word;
-		}
-		else if ( (gpf->flags & GPF_M_SWAP) != 0 )
-			swap_data(rec->recData, rec->recLen, gpf->bytes_per_word);
-		else if ( (gpf->flags & (GPF_M_EVENW | GPF_M_ODDW)) != 0 )
-		{
-			int jj = (rec->recSAddr / gpf->bytes_per_word) & 1;
-			jj = jj ^ ((gpf->flags & GPF_M_ODDW) != 0);
-			evenodd_data(rec->recData, rec->recData, rec->recLen, gpf->bytes_per_word, jj);
-			rec->recConvertedLen /= 2;
-		}
-		rec->recEAddr = rec->recSAddr + rec->recConvertedLen - 1;
-		rec->beenConverted = 1;
-	}
-
 	/* Clip anything off the low end */
 	if ( userLo < rec->recSAddr )
 		userLo = rec->recSAddr;

@@ -78,7 +78,9 @@ int PutRec_img( FILE *file, uchar *data, int recsize, ulong recstart )
 		data += amount;
 		}
 #else
-	if (fseek(file, recstart, SEEK_SET) < 0) 
+	if ( debug )
+		printf("PutRec_img(): size=0x%X, pos=0x%08lX\n", recsize, recstart);
+	if ( fseek(file, recstart, SEEK_SET) < 0 )
 	    return perr_return( 0, "Error seeking to position in IMAGE file");
 	if (fwrite( data, recsize, 1, file) != 1) 
 	    return perr_return( 0, "Error writing data");

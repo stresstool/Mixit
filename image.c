@@ -662,7 +662,6 @@ int init_reader(GPF *gpf)
 
 } /* end init_reader */
 
-
 /*==========================================================================*
  * readImage    - This routine extracts data from the image structure init'ed
  *                by init_reader a record at a time.  It handles filling if

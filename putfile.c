@@ -123,6 +123,124 @@ static int openOutput(const char *fname, const GPF *gpf)
 }
 
 /*==========================================================================*
+ *  group_data  - Handles the /GROUP option by copying a source array to a 
+ *                destination array, but only copying the GROUP'ed bytes.
+ *==========================================================================*/
+static void group_data(uchar *dest, uchar *src, int count,
+					   int bytes_per_word, int group_code)
+{
+	register int i;
+
+#if 0
+	src += bytes_per_word - group_code - 1;     /* For MSB -> LSB data machines */
+#else
+	src += group_code;                          /* For LSB -> MSB data */
+#endif
+
+	for ( i = 0; i < count; i += bytes_per_word )
+	{
+		*dest++ = *src;
+		src += bytes_per_word;
+	}
+
+} /* end group_data */
+
+
+/*==========================================================================*
+ *  swap_data   - Handles the /SWAP option by swapping bytes in the given 
+ *                array governed by bytes_per_word.
+ *==========================================================================*/
+static void swap_data(uchar *dest, int count, int bytes_per_word)
+{
+	register int i, j;
+	uchar       temp;
+
+	if ( count % bytes_per_word )
+	{
+		moan("Can't swap %d byte words in a %d byte record", bytes_per_word,
+			 count);
+		return;
+	}
+
+	while ( count > 0 )
+	{
+		j = bytes_per_word - 1;
+		for ( i = 0; i < bytes_per_word / 2; ++i, --j )
+		{
+			temp    = dest[i];
+			dest[i] = dest[j];
+			dest[j] = temp;
+		}
+		count -= bytes_per_word;
+		dest  += bytes_per_word;
+	}
+
+} /* end swap_data */
+
+/*==========================================================================*
+ *  evenodd_data  - Handles the /EVEN_WORDS and /ODD_WORDS options by copying
+ *		  a source array to a destination array, but only copying the
+ *		  half of the words.
+ *==========================================================================*/
+static void evenodd_data(uchar *dest, uchar *src, int count, short bytes_per_word, int odd)
+{
+	register int ii, half;
+
+	half = bytes_per_word / 2;
+	if ( half == 0 )
+	{
+		moan("Can't take even/odd %d byte words from a %d byte word", half, bytes_per_word);
+		return;
+	}
+
+	if ( count % bytes_per_word )
+	{
+		moan("Can't take (%d byte) words from a %d byte record", half, count);
+		return;
+	}
+
+	if ( odd )
+		src += half;
+	for ( ii = 0; ii < count; ii += bytes_per_word )
+	{
+		memcpy(dest, src, half);
+		dest += half;
+		src += bytes_per_word;
+	}
+
+} /* end evenodd_data */
+
+
+static int mungBuffer(GPF *gpf, uchar *dstBuf, int bufLen, ulong recAddr, ulong *dstAddr)
+{
+	/* Mung the entire input buffer according to the flags */
+	if ( (gpf->flags & (GPF_M_GROUP|GPF_M_SWAP|GPF_M_EVENW|GPF_M_ODDW)) )
+	{
+		if ( (gpf->flags & GPF_M_GROUP) )
+		{
+			group_data(dstBuf, dstBuf, bufLen, gpf->bytes_per_word, gpf->group_code);
+			bufLen /= gpf->bytes_per_word;
+			recAddr /= gpf->bytes_per_word;
+		}
+		else if ( (gpf->flags & GPF_M_SWAP) )
+		{
+			swap_data(dstBuf, bufLen, gpf->bytes_per_word);
+		}
+		else if ( (gpf->flags & (GPF_M_EVENW | GPF_M_ODDW)) )
+		{
+			int jj;
+			jj = recAddr & 1;
+			jj = jj ^ ((gpf->flags & GPF_M_ODDW) != 0);
+			evenodd_data(dstBuf, dstBuf, bufLen, 2, jj);
+			recAddr /= 2;
+			bufLen /= 2;
+		}
+	}
+	*dstAddr = recAddr;
+	return bufLen;
+}
+
+/*==========================================================================*
  | Dump the Image to a file.
  *==========================================================================*/
 int putfile(char *fname, GPF *gpf)
@@ -323,27 +441,32 @@ int putfile(char *fname, GPF *gpf)
 		else if ( bytes )
 		{
 			LogicalAddr tmpLo;
+			LogicalAddr adjLo;
+			int adjCount;
 			
 			tmpLo = lo - gpf->low_limit + gpf->beg_add;
+			/* Do any required conversions of the input and adjust the output address accordingly */
+			adjCount = mungBuffer(gpf,buffer,bytes,tmpLo,&adjLo);
 			if ( debug )
-				printf("putfile(): Calling PutRec(). lo_ask=0x%lX, hi_range=0x%lX, bytes=%d, tmpLo=0x%lX, lo=0x%lX, low_limit=0x%lX\n",
-					   lo_ask, hi_range, bytes, tmpLo, lo, gpf->low_limit);
-			if ( PutRec(fout, buffer, bytes, tmpLo) )
+				printf("putfile(): Calling PutRec(). lo_ask=0x%lX, hi_range=0x%lX, bytes=%d, tmpLo=0x%lX, lo=0x%lX, low_limit=0x%lX, adjCount=0x%X, adjLo=0x%lX\n",
+					   lo_ask, hi_range, bytes, tmpLo, lo, gpf->low_limit, adjCount, adjLo );
+			
+			if ( PutRec(fout, buffer, adjCount, adjLo) )
 			{
 				++rec_count;
 				if ( debug )
 				{
 					int ii;
 					printf("Output %ld: %d %d-byte record(s), asked 0x%lX-0x%lX, found 0x%lX-0x%lX, output to 0x%lX-0x%lX\n\t",
-						   rec_count, bytes / rBytes, rBytes,
+						   rec_count, adjCount / rBytes, rBytes,
 						   lo_ask, lo_ask + bytes - 1,
 						   lo, lo+bytes-1,
-						   tmpLo, tmpLo+bytes-1);
-					for ( ii = 0; ii < (bytes > 16 ? 16 : bytes); ++ii )
+						   adjLo, adjLo+adjCount-1);
+					for ( ii = 0; ii < (adjCount > 16 ? 16 : adjCount); ++ii )
 					{
 						printf(" %02X", (unsigned char)buffer[ii]);
 					}
-					if ( bytes > 16 )
+					if ( adjCount > 16 )
 						printf(" ...");
 					printf("\n");
 				}
@@ -365,7 +488,7 @@ int putfile(char *fname, GPF *gpf)
 	   )
 	{
 		if ( debug )
-			printf("putfile(): Padding file. lo_ask=0x%lX, hi_range=0x%lX (%ld bytes left), rBytes=%d,",
+			printf("putfile(): Padding file. lo_ask=0x%lX, hi_range=0x%lX (%ld bytes left), rBytes=%d\n",
 				   lo_ask, hi_range, hi_range-lo_ask+1, rBytes);
 		if ( clip )
 		{

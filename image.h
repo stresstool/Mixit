@@ -71,7 +71,7 @@ typedef struct inrecord
 	LogicalAddr recSAddr;	/* Start address of segment (inclusive) */
 	LogicalAddr	recEAddr;	/* End address of segment (inclusive) */
 	LogicalAddr recSegBase; /* segment offset for intel format (always 0 otherwise) */
-	int			beenConverted;
+/*	int			beenConverted; */
 	uchar       *recBuf;
 	size_t      recBufLen;
 	uchar       *recData;

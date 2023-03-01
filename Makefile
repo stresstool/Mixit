@@ -20,19 +20,12 @@ DEFINES = -DLINUX -D_LANGUAGE_C -D_ISOC99_SOURCE -D_XOPEN_SOURCE
 MODE = -m32
 
 OPT = -O
-CFLAGS = $(DEFINES) $(MODE) $(INCS) -g $(OPT) -Wall -pedantic -ansi -Wno-char-subscripts -std=c99
-LFLAGS = $(MODE)
-#CFLAGS = $(DEFINES) $(MODE) $(INCS) -g -Wall -pedantic -Dsun
-#CFLAGS = $(DEFINES) $(MODE) $(INCS) -O -Zi -i 
-#CFLAGS = $(DEFINES) $(MODE) $(INCS) -g  -Wall
-#CFLAGS = $(DEFINES) $(MODE) $(INCS) -O2
-#CFLAGS = $(DEFINES) $(MODE) $(INCS) -g  
-#D = rcc -c -i $(MODE)
-#L = rcc -O -Zi -i $(MODE)
+DBG = #-g
+WARNS = -Wall -pedantic -ansi -Wno-char-subscripts
+STD = -std=c99
+CFLAGS = $(DEFINES) $(MODE) $(INCS) $(DBG) $(OPT) $(WARNS) $(STD)
+LFLAGS = $(MODE) $(DBG)
 CC = gcc 
-
-#CC = cc 
-#CC = rcc 
 
 ECHO = /bin/echo -e
 SHELL = /bin/sh
