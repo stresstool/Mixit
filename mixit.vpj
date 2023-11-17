@@ -315,6 +315,7 @@
 			<F N="port.h"/>
 			<F N="prototyp.h"/>
 			<F N="qa.h"/>
+			<F N="version.h"/>
 		</Folder>
 		<Folder
 			Name="Resource Files"

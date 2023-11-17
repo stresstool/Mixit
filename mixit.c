@@ -6,6 +6,7 @@
 #if _XOPEN_SOURCE
 #include "unistd.h"
 #endif
+#include "version.h"
 
 char   	ttybuf[BUFSIZ],
 *ttp = ttybuf;          /* cmd buf & remainder ptr 					 */
@@ -370,7 +371,7 @@ int main(int argc, char *argv[])
 	inspec[0] = outspec[0] = '\0';  /* no data files open yet */
 
 	if ( fin == 0 || noisy )
-		printf("Mixit version %s %s. Copyright Atari Games Corp. 1996-1998\n", __DATE__, __TIME__);
+		printf("Mixit version %s. Copyright Atari Games Corp. 1996-1998\n", REVISION);
 
 	while ( 1 )
 	{

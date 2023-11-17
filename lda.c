@@ -243,13 +243,12 @@ int PutFoot_lda(FILE *file)
 {
 	uchar   data[512];
 	int     rv;
-	/* Fill out to the nearest 512-byte record */
-	while ( buffered_bytes++ < 512 )
-		fputc(0, file);
+
 	buffered_bytes = 0;
 
 	rv = PutRec_lda(file, data, 0, 0L);
 
+	/* Fill out to the nearest 512-byte record */
 	while ( buffered_bytes++ < 512 )
 		fputc(0, file);
 

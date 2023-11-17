@@ -254,6 +254,7 @@ mixit.o:	mixit.h
 mixit.o:	prototyp.h
 mixit.o:	port.h
 mixit.o:	qa.h
+mixit.o:	version.h
 mot.o:	mot.c
 mot.o:	mixit.h
 mot.o:	image.h
