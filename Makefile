@@ -318,6 +318,7 @@ rom.o:	formats.h
 rom.o:	hexutl.h
 rom.o:	mixit.h
 rom.o:	prototyp.h
+rom.o:	version.h
 tekhex.o:	tekhex.c
 tekhex.o:	mixit.h
 tekhex.o:	image.h

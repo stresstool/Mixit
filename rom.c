@@ -67,6 +67,7 @@ Author: Jim Petrick
 
 #include <time.h>
 #include "mixit.h"
+#include "version.h"
 
 #define BINARY_MARK     '\''
 #define COMMENT_MARK    ';'
@@ -657,7 +658,7 @@ int PutHead_rom(FILE *file, ulong addr, ulong hi)
 
 	time(&aclock);
 	newtime = localtime(&aclock);
-	fprintf(file, "; ROM/PROM data file created %s\n", asctime(newtime));
+	fprintf(file, "; ROM/PROM data file created via Mixit %s %s\n", REVISION, asctime(newtime));
 
 	fprintf(file, "; File name = %s\n\n", current_fname);
 
