@@ -169,15 +169,15 @@ size is 8.  It can only resolve to one of (decimal) 8, 16, 24 or 32.
 </p>
 <h5>/GROUP=n</h5>
 <p>
-Group specifies which group of 8 bits (i.e. the byte number) in the word to
+Group specifies which group of 8 bits in the word to
 output. This allows you create an output file that only contains every
 <b>nth</b> byte of the input file(s). Useful, for example, when one has to
 seperate the high and low bytes of 16 bit programs into seperate files. 
 This option is only significant for word sizes greater than 8 bits. The
-<b>n</b> is a DECIMAL number indicating the BYTE number relative to 0 in
-  the word to include in the output. For example: <b>/WORD_SIZE=24/GROUP=2</b> would cause 
+<b>n</b> is a DECIMAL number indicating the least signficant bit number of
+the word relative to 0. It must be a multple of 8. For example: <b>/WORD_SIZE=24/GROUP=16</b> would cause 
 only every 3rd byte to be included in the output file. The only valid numbers
-  for <b>n</b> is 0, 1, 2 or 3.
+for <b>n</b> are 0, 8, 16 and 24.
 </p>
 <h5>/RECORD_SIZE=n</h5>
 <p>
