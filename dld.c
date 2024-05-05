@@ -79,20 +79,20 @@ int GetRec_dld(InRecord *rec)
 	/* Convert to byte string. */
 
 	SHOW( *bufend = 0;
-		 fputs((char *)inbuf, stderr);
-		 putc('\n', stderr);
+		 fputs((char *)inbuf, errFile);
+		 putc('\n', errFile);
 		)
 	strtobytes(inbuf, cnt);
 	bufend = inbuf + cnt;
 	SHOW(	for ( data = inbuf; data < bufend; ++data )
-			 fprintf(stderr, "%.2X", *data);
-		 putc('\n', stderr);
+			 fprintf(errFile, "%.2X", *data);
+		 putc('\n', errFile);
 		 )
 	/* Get count, addr, and record type. */
 
 	datacnt = inbuf[0];
 	rec->recSAddr = bytestoaddr(&inbuf[1], 2);
-	SHOW( fprintf(stderr, "addr = %.4X\n", rec->recSAddr);
+	SHOW( fprintf(errFile, "addr = %.4X\n", rec->recSAddr);
 		 )
 
 	/* Verify record length and checksum. */
@@ -106,7 +106,7 @@ int GetRec_dld(InRecord *rec)
 	chk = 0;
 	for ( data = inbuf; data < bufend - 2; ++data )
 		chk += *data;
-	SHOW( fprintf(stderr, "chk = 0x%.2X\n", chk);
+	SHOW( fprintf(errFile, "chk = 0x%.2X\n", chk);
 		 )
 	if ( (LogicalAddr)(chk & 0xFFFF) != bytestoaddr(bufend - 2, 2) )
 	{

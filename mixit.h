@@ -57,6 +57,7 @@ typedef unsigned long		LogicalAddr;
 
 extern int noisy;
 extern int debug;
+extern FILE *errFile;
 
 #define in(l,m,h)   			( ((l) <= (m))  &&  ((m) <= (h)))
 #define byte_of(x) 				( (x) & 0xFF )
@@ -67,4 +68,6 @@ extern int debug;
 #include "formats.h"
 #include "hexutl.h"
 #include "prototyp.h"
+
+extern char *error2str( int num );
 #endif

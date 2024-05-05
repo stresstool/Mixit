@@ -105,7 +105,7 @@ int eprintf( const char *format, ... )
 	int val; 							/* return value 					 */
 	FILE *fp; 							/* channel to use 					 */
 
-	fp = isatty( fileno( stdout ) ) ? stdout : stderr;
+	fp = isatty( fileno( stdout ) ) ? stdout : errFile;
 
 	va_start(ap, format); 				/* set up the argument pointer 		 */
 
@@ -122,7 +122,7 @@ int eprintl( const char *format, ... )
 	int val; 							/* return value 					 */
 	FILE *fp; 							/* channel to use 					 */
 
-	fp = isatty( fileno( stdout ) ) ? stdout : stderr;
+	fp = isatty( fileno( stdout ) ) ? stdout : errFile;
 
 	va_start(ap, format); 				/* set up the argument pointer 		 */
 

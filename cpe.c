@@ -146,7 +146,7 @@ int GetRec_cpe(InRecord *record)
 	{
 		if ( GetHead_cpe(record->recFile) )
 		{
-			fprintf(stderr, "Not a CPE file format\n");
+			fprintf(errFile, "Not a CPE file format\n");
 			return record->recType = REC_ERR;
 		}
 		record->recPrivate = (void *)1;
@@ -175,7 +175,7 @@ int GetRec_cpe(InRecord *record)
 				record->recData = record->recBuf = realloc(record->recBuf, (size_t)len);
 				if ( !record->recBuf )
 				{
-					fprintf(stderr, "Record too long: %ld > %d. Out of memory.\n", len, (int)record->recBufLen);
+					fprintf(errFile, "Record too long: %ld > %d. Out of memory.\n", len, (int)record->recBufLen);
 					record->recBufLen = 0;
 					return record->recType = REC_ERR;
 				}
@@ -196,7 +196,7 @@ int GetRec_cpe(InRecord *record)
 		return record->recType = REC_XFER;
 	case 3:
 		{
-			ulong reg;
+			ulong reg=0;
 			if ( readw(&reg, record->recFile) )
 				goto read_error;
 			if ( readl(&record->recSAddr, record->recFile) )

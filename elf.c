@@ -169,7 +169,7 @@ int GetRec_elf(GPF *gpf, InRecord *rec, LogicalAddr lo, LogicalAddr hi, long rel
 		 leh->e_ident[2] != 'L' ||
 		 leh->e_ident[3] != 'F' )
 	{
-		fprintf(stderr, "Not an ELF format file\n");
+		fprintf(errFile, "Not an ELF format file\n");
 		return 0;
 	}
 

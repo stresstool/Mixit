@@ -124,7 +124,7 @@ int GetRec_coff(GPF *gpf, InRecord *rec, LogicalAddr lo, LogicalAddr hi, long re
 	coff = (Coff *)calloc(sizeof(Coff) + sizeof(FILHDR), 1);
 	if ( coff == 0 )
 	{
-		fprintf(stderr, "Out of memory allocating %d bytes in GetRec_coff\n",
+		fprintf(errFile, "Out of memory allocating %d bytes in GetRec_coff\n",
 				sizeof(Coff) + sizeof(FILHDR));
 		return 0;
 	}
@@ -167,7 +167,7 @@ int GetRec_coff(GPF *gpf, InRecord *rec, LogicalAddr lo, LogicalAddr hi, long re
 	if ( jj == 0 )       /* no match on magic */
 	{
 		mag = (mag << 8) | ((mag >> 8) & 0xFF); /* flip 'em back to original */
-		fprintf(stderr, "Input file is not COFF. Magic = %04X\n", mag);
+		fprintf(errFile, "Input file is not COFF. Magic = %04X\n", mag);
 		goto clean_up;
 	}
 

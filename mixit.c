@@ -16,6 +16,7 @@ outspec;                /* accepted file specs for MIXIT routines 	 */
 BUF 	filespec;               /* filespec we will collect EXACTLY one of 	 */
 GPF 	ingpf, outgpf;          /* environment for getfile() / putfile() 	 */
 int 	debug;                     /* Debug flag 								 */
+FILE *errFile;
 
 extern FILE *fout;              /* Current output file (NULL if none open) 	 */
 /* parsing constructs 						 */
@@ -76,7 +77,7 @@ static void write_eof(void)
 	memcpy(&outgpf.image, &ingpf.image, sizeof(Image));
 	if ( !putfile(outspec, &outgpf) )
 	{
-		fprintf(stderr, "\n");     /* they've already been told 			 */
+		fprintf(errFile, "\n");     /* they've already been told 			 */
 	}                           /* but finish marking it anyways 		 */
 
 	outspec[0] = '\0';              /* now we have no output file 			 */
@@ -99,13 +100,13 @@ static void outcmd(void)
 	form = getFormat(filespec);
 	if ( form == GPF_K_COFF )
 	{
-		fprintf(stderr, "Sorry, COFF is not supported for output just yet\n");
+		fprintf(errFile, "Sorry, COFF is not supported for output just yet\n");
 		outspec[0] = 0;
 		return;
 	}
 	if ( form == GPF_K_ELF )
 	{
-		fprintf(stderr, "Sorry, ELF32 is not supported for output just yet\n");
+		fprintf(errFile, "Sorry, ELF32 is not supported for output just yet\n");
 		outspec[0] = 0;
 		return;
 	}
@@ -124,9 +125,11 @@ static void incmd(void)
 	if ( ioparsebad(1, initgpf(&ingpf)) )
 		return;
 
+	if ( noisy || debug )
+		printf("Processing: %s -> %s\n", filespec, outspec );
 	if ( !outspec[0] )
 	{
-		fprintf(stderr, "No output file specified yet (use OUTPUT command first);  command ignored\n\n");
+		fprintf(errFile, "No output file specified yet (use OUTPUT command first);  command ignored\n\n");
 		return;
 	}
 
@@ -144,7 +147,7 @@ static void incmd(void)
 
 	if ( !getfile(inspec, &ingpf) )
 	{                           /* error message already out 			 */
-		fprintf(stderr, "\n");     /* add a blank line 					 */
+		fprintf(errFile, "\n");     /* add a blank line 					 */
 		inspec[0] = savec;          /* restore state of flag 				 */
 		return;
 	}
@@ -197,7 +200,7 @@ static void incmd(void)
 	/* note using INPUT gpf 						 						 */
 	if ( !putfile(outspec, &ingpf) )
 	{
-		fprintf(stderr, "\n");     /* error text already reported 			 */
+		fprintf(errFile, "\n");     /* error text already reported 			 */
 		outspec[0] = '\0';          /* say we have no file open or known 	 */
 		return;
 	}
@@ -282,9 +285,10 @@ int noisy = 0;
 int main(int argc, char *argv[])
 {
 	FILE *fin = stdin;   /* input file */
-	int opt;
+	int opt,ef=0;
 	const char *cmdFile=NULL;
 	
+	errFile = stderr;
 #if 0
 	--argc;         /* eat the imagename */
 	++argv;
@@ -308,7 +312,7 @@ int main(int argc, char *argv[])
 				case 'h':
 				case '?':
 				default:
-				fputs("Usage: mixit [-dqvh?] [command_file[.mix]]\n", stderr);
+				fputs("Usage: mixit [-dqvh?] [command_file[.mix]]\n", errFile);
 				return 1;
 			}
 			--argc;
@@ -320,10 +324,14 @@ int main(int argc, char *argv[])
 	if ( argc > 0 )
 		cmdFile = *argv;
 #else
-	while ( (opt = getopt(argc, argv, "vdhqv?")) != -1 )
+	while ( (opt = getopt(argc, argv, "evdhqv?")) != -1 )
 	{
 		switch (opt)
 		{
+		case 'e':
+			errFile = stdout;
+			ef = 1;
+			break;
 		case 'd':
 			debug = 1;
 			break;
@@ -336,7 +344,7 @@ int main(int argc, char *argv[])
 		case 'h':
 		case '?':
 		default: /* '?' */
-			fputs("Usage: mixit [-dqvh?] [command_file[.mix]]\n", stderr);
+			fputs("Usage: mixit [-dqvh?] [command_file[.mix]]\n", errFile);
 			return 1;
 		}
 	}
@@ -344,7 +352,7 @@ int main(int argc, char *argv[])
 		cmdFile = argv[optind];
 #endif
 	if ( debug )
-		printf("Options noisy=%d, argc=%d, optind=%d, cmdFile=%s\n", noisy, argc, optind, cmdFile ? cmdFile : "<none>" );
+		printf("Options ef=%d, noisy=%d, argc=%d, optind=%d, cmdFile=%s\n", ef, noisy, argc, optind, cmdFile ? cmdFile : "<none>" );
 	if ( cmdFile )
 	{
 		char *fname, extent[10];
@@ -383,12 +391,12 @@ int main(int argc, char *argv[])
 				exitcmd();  /* won't come back */
 
 			case EOF - 1:
-				fprintf(stderr, "\nI/O error; command ignored\n\n");
+				fprintf(errFile, "\nI/O error; command ignored\n\n");
 				purge_qa2(fin, stdout);
 				continue;
 
 			default:
-				fprintf(stderr, "\nLine too long; command ignored\n\n");
+				fprintf(errFile, "\nLine too long; command ignored\n\n");
 				purge_qa2(fin, stdout);
 				continue;
 			};

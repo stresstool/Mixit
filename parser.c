@@ -60,16 +60,16 @@ int showbad(int before, char *why)
 
 	if ( in(&ttybuf[0], ttp, &ttybuf[BUFSIZ - 1]) )   /* ttp is valid */
 	{
-		fprintf(stderr, "%s:\n", why);
-		fprintf(stderr, "in your line: %s", ttybuf);
+		fprintf(errFile, "%s:\n", why);
+		fprintf(errFile, "in your line: %s", ttybuf);
 		*ttp = '\0';    /* end the string here */
 		while ( *++cp )
 			if ( *cp != '\t' )
 				*cp = ' ';
-		fprintf(stderr, "at or %s:%s^\n\n", before ? "before" : "after", ttybuf);
+		fprintf(errFile, "at or %s:%s^\n\n", before ? "before" : "after", ttybuf);
 	}
 	else
-		fprintf(stderr, "%s\n\n", why);
+		fprintf(errFile, "%s\n\n", why);
 
 	return 1;
 } /* end showbad */
@@ -295,7 +295,7 @@ static int typebad(int input_parse, GPF *gpfp)    /* slash already eaten */
 	case 13:
 		if ( !input_parse )
 		{
-			fprintf(stderr, "Sorry, COFF is not supported for output just yet\n");
+			fprintf(errFile, "Sorry, COFF is not supported for output just yet\n");
 			return 1;
 		}
 		gpfp->rec_type = GPF_K_COFF;
@@ -303,7 +303,7 @@ static int typebad(int input_parse, GPF *gpfp)    /* slash already eaten */
 	case 14:
 		if ( !input_parse )
 		{
-			fprintf(stderr, "Sorry, ELF32 is not supported for output just yet\n");
+			fprintf(errFile, "Sorry, ELF32 is not supported for output just yet\n");
 			return 1;
 		}
 		gpfp->rec_type = GPF_K_ELF;

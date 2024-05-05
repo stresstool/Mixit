@@ -94,13 +94,13 @@ int GetRec_mot(InRecord *rec)
 	++inbuf;
 
 	/* Convert to byte string. */
-	SHOW( *bufend = 0; fputs((char *)inbuf, stderr); putc('\n', stderr); )
+	SHOW( *bufend = 0; fputs((char *)inbuf, errFile); putc('\n', errFile); )
 	strtobytes(inbuf, cnt);
 	bufend = inbuf + cnt;
 	SHOW(
 		for (data = inbuf; data < bufend; ++data)
-			fprintf(stderr, "%.2X", *data);
-	putc('\n', stderr);
+			fprintf(errFile, "%.2X", *data);
+	putc('\n', errFile);
 	)
 
 	/* Get record type. */
@@ -135,7 +135,7 @@ int GetRec_mot(InRecord *rec)
 	chk = 0;
 	for (data = inbuf; data < bufend; ++data)
 		chk += *data;
-	SHOW( fprintf(stderr, "chk = 0x%.2X\n", chk); )
+	SHOW( fprintf(errFile, "chk = 0x%.2X\n", chk); )
 	if ((chk & 0xFF) != 0xFF) 
 		{
 		moan("Checksum error");
@@ -145,7 +145,7 @@ int GetRec_mot(InRecord *rec)
 
 	/* Finish up addr and data. */
 	rec->recSAddr = bytestoaddr(&inbuf[1], addrlen);
-	SHOW( fprintf(stderr, "addr = %.4X\n", rec->recSAddr); )
+	SHOW( fprintf(errFile, "addr = %.4X\n", rec->recSAddr); )
 
 	rec->recLen = datacnt - 1 - addrlen;
 	rec->recEAddr = rec->recSAddr + rec->recLen -1;

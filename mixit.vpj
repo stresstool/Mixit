@@ -280,6 +280,7 @@
 			<F N="dio.c"/>
 			<F N="dld.c"/>
 			<F N="elf.c"/>
+			<F N="err2str.c"/>
 			<F N="getfile.c"/>
 			<F N="getform.c"/>
 			<F N="hexutl.c"/>
@@ -330,10 +331,24 @@
 			Filters=""
 			GUID="{6190594F-6117-4F8B-ADB1-A3ED094D5A36}">
 			<F
-				N="Makefile"
+				N="Makefile.common"
+				Type="Makefile"/>
+			<F
+				N="Makefile.linux"
+				Type="Makefile"/>
+			<F
+				N="Makefile.mingw32"
+				Type="Makefile"/>
+			<F
+				N="Makefile.msys2"
+				Type="Makefile"/>
+			<F
+				N="Makefile.pi32"
 				Type="Makefile"/>
 			<F N="mixit.win_rtf"/>
 			<F N="mixit.win_txt"/>
 		</Folder>
 	</Files>
+	<List Name="RTE">
+	</List>
 </Project>

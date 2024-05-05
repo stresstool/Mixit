@@ -314,7 +314,7 @@ int PutFoot_dio(FILE *file)
 	*bp++ = (uchar)((amtWritten >>  4) & 15);
 	*bp++ = (uchar)((amtWritten >>  0) & 15);
 	*bp++ = 0xFF;
-/* fprintf(stderr, "Wrote a %d (%08lX) byte dio file\n", amtWritten, amtWritten); */
+/* fprintf(errFile, "Wrote a %d (%08lX) byte dio file\n", amtWritten, amtWritten); */
 	if ( fseek(file, 0, SEEK_SET) < 0 )
 		return perr_return(0, "Error seeking to 0 to re-write header");
 	if ( fwrite(buffer, 16, 1, file) != 1 )

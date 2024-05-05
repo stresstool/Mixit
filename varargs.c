@@ -12,7 +12,7 @@ int  err_ret( int ret, char *fmt, ... ); 	/* prints error and returns ret. */
 int  perr_ret( int ret, char *fmt, ... ); 	/* prints perror and returns ret.*/
 void moan( char *fmt, ... ); 				/* prints an error message. 	 */
 void warn( char *fmt, ... ); 				/* prints a warning message. 	 */
-void info( char *fmt, ... ); 				/* Prints an info message to stderr.*/
+void info( char *fmt, ... ); 				/* Prints an info message to errFile.*/
 void DBUG( char *fmt, ... ); 				/* prints a debug message. 		 */
 void DBUGL( int lvl, char *fmt, ... ); 	/* prints a debug msg if debug > lvl.*/
 int  getstr( char *result, char *fmt, ... );/* prompts and reads a string.  */
@@ -37,11 +37,11 @@ void err_exit(char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf( stderr, "\nERROR: " );
+	fprintf( errFile, "\nERROR: " );
 	va_start( ap, fmt );
-	vfprintf( stderr, fmt, ap );
+	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fprintf( stderr, "\n \n" );
+	fprintf( errFile, "\n \n" );
 	exit(-1);
 
 } /* end err_exit */
@@ -54,11 +54,11 @@ void ev_exit(int eval, char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf( stderr, "\nERROR: " );
+	fprintf( errFile, "\nERROR: " );
 	va_start( ap, fmt );
-	vfprintf( stderr, fmt, ap );
+	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fprintf( stderr, "\n \n" );
+	fprintf( errFile, "\n \n" );
 	exit(eval);
 
 } /* end ev_exit */
@@ -89,11 +89,11 @@ int err_return(int ret, char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf( stderr, "\nERROR: " );
+	fprintf( errFile, "\nERROR: " );
 	va_start( ap, fmt );
-	vfprintf( stderr, fmt, ap );
+	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fprintf( stderr, "\n \n" );
+	fprintf( errFile, "\n \n" );
 	return ret;
 } /* end err_return */
 
@@ -120,12 +120,12 @@ void moan(char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf( stderr, "\nERROR: " );
+	fprintf( errFile, "\nERROR: " );
 	va_start( ap, fmt );
-	vfprintf( stderr, fmt, ap );
+	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fprintf( stderr, "\n \n" );
-	fflush( stderr );
+	fprintf( errFile, "\n \n" );
+	fflush( errFile );
 
 } /* end moan */
 
@@ -137,12 +137,12 @@ void warn(char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf( stderr, "\nWARNING: " );
+	fprintf( errFile, "\nWARNING: " );
 	va_start( ap, fmt );
-	vfprintf( stderr, fmt, ap );
+	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fprintf( stderr, "\n \n" );
-	fflush( stderr );
+	fprintf( errFile, "\n \n" );
+	fflush( errFile );
 
 } /* end warn */
 
@@ -154,10 +154,10 @@ void info(char *fmt, ...)
 	va_list ap;
 
 	va_start( ap, fmt );
-	vfprintf( stderr, fmt, ap );
+	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fprintf( stderr, "\n" );
-	fflush( stderr );
+	fprintf( errFile, "\n" );
+	fflush( errFile );
 
 } /* end info */
 
@@ -171,11 +171,11 @@ void DBUG(char *fmt, ...)
 
 	if (!debug) return;
 
-	fprintf( stderr, "\nDEBUG: " );
+	fprintf( errFile, "\nDEBUG: " );
 	va_start( ap, fmt );
-	vfprintf( stderr, fmt, ap );
+	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fflush( stderr );
+	fflush( errFile );
 
 } /* end DBUG */
 
@@ -190,9 +190,9 @@ void DBUGL(int lvl, char *fmt, ...)
 	if (debug <= lvl) return;
 
 	va_start( ap, fmt );
-	vfprintf( stderr, fmt, ap );
+	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fflush( stderr );
+	fflush( errFile );
 
 } /* end DBUGL */
 

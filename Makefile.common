@@ -7,29 +7,31 @@ INCS = -I.
 A1 = asm.o dio.o dld.o getfile.o getform.o hexutl.o 
 A2 = image.o img.o intel.o lda.o mac.o mixit.o 
 A3 = mot.o parser.o port2.o putfile.o qa.o rom.o 
-A4 = tekhex.o varargs.o vlda.o coff.o cpe.o elf.o
+A4 = tekhex.o varargs.o vlda.o coff.o cpe.o elf.o err2str.o
 
 AC1 = asm.c dld.c dio.c getfile.c getform.c hexutl.c image.c
 AC2 = img.c intel.c lda.c mac.c mixit.c mot.c parser.c
 AC3 = port2.c putfile.c qa.c rom.c tekhex.c varargs.c vlda.c coff.c cpe.c elf.c
 
-DEFINES = -DLINUX -D_LANGUAGE_C -D_ISOC99_SOURCE -D_XOPEN_SOURCE
+MAKEFILE = Makefile.common
 
-#MODE = -Ml2
-#MODE = -Ml2 -dos
-MODE = -m32
+EXE =
+ifeq ($(MINGW),1)
+	EXE = .exe
+endif
+ifeq ($(MSYS2),1)
+	EXE = .exe
+endif
 
-OPT = -O
-DBG = #-g
-WARNS = -Wall -pedantic -ansi -Wno-char-subscripts
+DEFINES = -DLINUX -D_LANGUAGE_C -D_ISOC99_SOURCE -D_XOPEN_SOURCE -DHAS_STRERROR
+DEFINES += $(EXTRA_DEFINES)
+
+CHKS = -Wall -pedantic -ansi -Wno-char-subscripts
+CHKS += $(EXTRA_CHKS)
+
 STD = -std=c99
-CFLAGS = $(DEFINES) $(MODE) $(INCS) $(DBG) $(OPT) $(WARNS) $(STD)
-LFLAGS = $(MODE) $(DBG)
-CC = gcc 
-
-ECHO = /bin/echo -e
-SHELL = /bin/sh
-CO = co
+CFLAGS = $(DEFINES) $(HOST_CPU) $(INCS) $(DBG) $(OPT) $(CHKS) $(STD)
+LFLAGS = $(HOST_CPU) $(DBG)
 
 C = $(CC) -c $(CFLAGS)
 D = $(CC) -c $(CFLAGS)
@@ -39,85 +41,64 @@ L = $(CC) $(CFLAGS)
 
 #		*Explicit Rules*
 
-CHECKOUT = 0 
-
-define FROM_RCS
- if [ -w $(@F) ];\
- then \
-        $(ECHO) "Warning: $@ is writeable but older than version in RCS"; \
-        exit 0; \
- fi; \
- if [ -r $(@F) ]; \
- then \
-        if [ $(CHECKOUT) -eq 0 ]; \
-        then \
-                rcsdiff $(@F) > /dev/null 2>&1;\
-                if [ $$? -ne 0 ]; \
-                then \
-                        $(ECHO)  "FYI: There's a newer version of $@ in RCS"; \
-                fi; \
-                exit 0; \
-        fi; \
- fi; \
- $(ECHO)  "\tChecking out $@ ...";\
- $(CO) $(COFLAGS) $(@F)
-endef
-
-%.c : RCS/%.c,v
-	$(FROM_RCS)
-
-%.h : RCS/%.h,v
-	$(FROM_RCS)
-
-define CC_RULE
-        $(ECHO) "\tCompiling $<..."
-        rm -f $(basename $(@F)).err $(basename $(@F)).warn
-        $(CC) $(CFLAGS) -c $< > $(basename $(@F)).err 2>&1;\
-        sts=$$?; \
-        if [ ! -s $(basename $(@F)).err ];\
-        then\
-          rm $(basename $(@F)).err;\
-        else\
-          if [ $$sts -eq 0 ]; \
-          then \
-            mv $(basename $(@F)).err $(basename $(@F)).warn; \
-            $(ECHO) 'Warnings in "$<"';\
-          else \
-            $(ECHO) 'Errors in "$<"';\
-          fi \
-        fi
-endef
+ifeq ($(MINGW),1)
 
 %.o : %.c
-	$(CC_RULE)
+	$(ECHO) $(DELIM)    Compiling $<...$(DELIM)
+	$C -o $@ $<
+
+else
+
+%.o : %.c
+	$(ECHO) $(DELIM)    Compiling $<...$(DELIM);\
+	rm -f $(basename $@).err $(basename $@).warn;\
+	$C -o $@ $< > $(basename $@).err 2>&1;\
+	if [ $$? -ne 0 ]; then\
+	    $(ECHO) $(DELIM)Errors in $(basename $@).err$(DELIM);\
+	    cat $(basename $@).err;\
+	else\
+	    if [ -s $(basename $@).err ]; then\
+	        mv $(basename $@).err $(basename $@).warn;\
+	        $(ECHO) $(DELIM)Warnings in $(basename $@).warn$(DELIM);\
+	        cat $(basename $@).warn;\
+            else\
+	        rm -f $(basename $@).err;\
+	    fi;\
+	fi
+
+endif    
 
 %.d : %.c
-	@$(ECHO)  "Making dependencies on $< ..."
+	@$(ECHO)  $(DELIM)    Making dependencies on $< ...$(DELIM)
 	@$(CC) $(CFLAGS) -M $< >> depends
+
+%.E : %.c
+	$(ECHO) $(DELIM)    Compiling $< to $@ ...$(DELIM)
+	$(CC) $(CFLAGS) -E $< > $@
 
 ALLDS = $(patsubst %.o,%.d,$(A1) $(A2) $(A3) $(A4))
 
-mixit: $(A1) $(A2) $(A3) $(A4) Makefile
-	$(ECHO)  "\tlinking..."
-	$L $(LFLAGS) -o mixit $(A1) $(A2) $(A3) $(A4)
-#	$L $(LFLAGS) -m mixit.map -o mixit $(A1) $(A2) $(A3) $(A4)
+mixit$(EXE): $(A1) $(A2) $(A3) $(A4) $(MAKEFILE)
+	$(ECHO)  $(DELIM)    linking...$(DELIM)
+	$L $(LFLAGS) -o $@ $(A1) $(A2) $(A3) $(A4)
 
 test:
-	@$(ECHO)  "ALLDS = $(ALLDS)"
+	@$(ECHO)  $(DELIM)ALLDS = $(ALLDS)$(DELIM)
+	@$(ECHO)  $(DELIM)ALLOS = $(A1) $(A2) $(A3) $(A4) $(MAKEFILE)$(DELIM)
 
 depends.d : $(ALLDS)
 	
 clean:
-	/bin/rm -f $(A1) $(A2) $(A3) $(A4) mixit.map mixit *.warn *.err
+	$(RM) $(A1) $(A2) $(A3) $(A4) mixit.map mixit$(EXE) *.warn *.err
 
-mixit.lnt : $(AC1) $(AC2) $(AC3)
-	sh lint -LARGE -abx -UM_XENIX -DM_I86 -DM_I286 -DMS_DOS $(AC1) $(AC2) $(AC3)
+#mixit.lnt : $(AC1) $(AC2) $(AC3)
+#	sh lint -LARGE -abx -UM_XENIX -DM_I86 -DM_I286 -DMS_DOS $(AC1) $(AC2) $(AC3)
 
-mixit.vms : $(AC1) $(AC2) $(AC3)
-	sh lint -LARGE -abx -UM_XENIX -UM_I86 -UM_I286 -UM_I386 -DVMS $(AC1) $(AC2) $(AC3)
+#mixit.vms : $(AC1) $(AC2) $(AC3)
+#	sh lint -LARGE -abx -UM_XENIX -UM_I86 -UM_I286 -UM_I386 -DVMS $(AC1) $(AC2) $(AC3)
 
-mixit.ln : makefile
-	mixit /OUT=mixit /MAP=mixit.tmap /err/rel/deb mixitst /opt
+#mixit.ln : $(MAKEFILE)
+#	mixit$(EXE) /OUT=mixit /MAP=mixit.tmap /err/rel/deb mixitst /opt
 
 #
 # Automatically genetrated my a make depends

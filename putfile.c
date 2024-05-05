@@ -278,8 +278,8 @@ int putfile(char *fname, GPF *gpf)
 	if ( (gpf->flags & GPF_M_DISPL) )
 	{
 #if 0
-		if ( isatty(fileno(stderr)) )
-			fputs("\n", stderr);
+		if ( isatty(fileno(errFile)) )
+			fputs("\n", errFile);
 #endif
 		printf("%s file '%s' . . .\n", (gpf->flags & (GPF_M_APPND | GPF_M_EOFONLY)) ? "Appending to" : "Creating", fname);
 	}
@@ -481,7 +481,7 @@ int putfile(char *fname, GPF *gpf)
 		if ( err == 0 )
 			break;
 	}
-	/* fprintf(stderr, "hi_range=%08lX, lo_range=%08lX, lo_ask=%08lX (dif=%d.)\n",
+	/* fprintf(errFile, "hi_range=%08lX, lo_range=%08lX, lo_ask=%08lX (dif=%d.)\n",
 				hi_range, lo_range, lo_ask, hi_range-lo_ask+1); */
 	if (    (gpf->rec_type == GPF_K_DIO || gpf->rec_type == GPF_K_IMG)
 		 && hi_range < ~1l && lo_ask <= hi_range && (gpf->flags & GPF_M_NOPAD) == 0
@@ -534,7 +534,7 @@ int main(int argc, char** argv)
 	GPF	gpf;
 	if ( argc != 3 )
 	{
-		fprintf(stderr, "Usage: mytest infile outfile\n");
+		fprintf(errFile, "Usage: mytest infile outfile\n");
 		exit(EXIT_FAILURE);
 	}
 	if ( !getfile(argv[1], &gpf) )
