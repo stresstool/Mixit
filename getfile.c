@@ -190,23 +190,8 @@ int getfile(char *fname, GPF *gpf)
 		{
 		case REC_DATA:
 			/* This record contains some data that we're looking for */
-#if 1
-/*			save_data(&rec, addrS - lo + base, gpf); */
-			save_data(&rec,lo,hi,relocation,gpf);
-#else
-			{
-				if ((flag & GPF_M_GROUP) != 0)
-				{
-					group_data( rec.recData, rec.recData, rec.recLen, gpf->bytes_per_word, gpf->group_code );
-					rec.recLen /= gpf->bytes_per_word;
-				}
-				else if ((flag & GPF_M_SWAP) != 0)
-				{
-					swap_data( rec.recData, rec.recLen, gpf->bytes_per_word );
-				}
-				imageWrite( &gpf->image, addr - lo + base, rec.recLen, rec.recData);
-			}
-#endif
+			if ( rec.recLen != 0 )
+					save_data(&rec, lo, hi, relocation, gpf);
 			continue;
 		case REC_XFER:
 			gpf->xfer_add = rec.recSAddr;
