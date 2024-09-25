@@ -57,17 +57,30 @@ typedef unsigned long		LogicalAddr;
 
 extern int noisy;
 extern int debug;
+
+#define DOING_UNDEFINED	(0)
+#define DOING_IN_CMD	(1)
+#define DOING_OUT_CMD	(2)
+#define DOING_OUTPUT	(4)
+extern int whatWeAreDoing;
+
 extern FILE *errFile;
 
 #define in(l,m,h)   			( ((l) <= (m))  &&  ((m) <= (h)))
 #define byte_of(x) 				( (x) & 0xFF )
 #define PUT_BUF( ptr, byte )    ( *ptr++ = (uchar)byte )
 
+#include "port.h"
 #include "image.h"
 #include "gpf.h"
 #include "formats.h"
 #include "hexutl.h"
 #include "prototyp.h"
+
+extern BUF  inspec;                 /* accepted file specs for MIXIT routines*/
+extern BUF  outspec;                /* accepted file specs for MIXIT routines*/
+extern GPF  outgpf;                 /* environment for getfile() / putfile() */
+extern BUF  filespec;               /* filespec we will collect EXACTLY one of*/
 
 extern char *error2str( int num );
 #endif

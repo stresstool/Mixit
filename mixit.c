@@ -3,6 +3,7 @@
 #include "mixit.h"
 #include "port.h"
 #include "qa.h"
+#include "lclreadline.h"
 #if _XOPEN_SOURCE
 #include "unistd.h"
 #endif
@@ -11,8 +12,7 @@
 char   	ttybuf[BUFSIZ],
 *ttp = ttybuf;          /* cmd buf & remainder ptr 					 */
 char   	token[BUFSIZ];          /* current token and its work pointer 		 */
-BUF	   	inspec,
-outspec;                /* accepted file specs for MIXIT routines 	 */
+BUF	   	inspec, outspec;        /* accepted file specs for MIXIT routines 	 */
 BUF 	filespec;               /* filespec we will collect EXACTLY one of 	 */
 GPF 	ingpf, outgpf;          /* environment for getfile() / putfile() 	 */
 int 	debug;                     /* Debug flag 								 */
@@ -32,6 +32,7 @@ static void	incmd(void);
 static void	exitcmd(void);
 static void	helpcmd(void);
 int			main(int argc, char *argv[]);
+int	whatWeAreDoing;
 
 /*==========================================================================*
  | zap the structure
@@ -96,7 +97,7 @@ static void outcmd(void)
 	write_eof();                    /* done with that one 					 */
 	inspec[0] = '\0';               /* and no files used yet 				 */
 
-	strcpy(outspec, filespec);
+	strncpy(outspec, filespec, sizeof(outspec));
 	form = getFormat(filespec);
 	if ( form == GPF_K_COFF )
 	{
@@ -125,8 +126,13 @@ static void incmd(void)
 	if ( ioparsebad(1, initgpf(&ingpf)) )
 		return;
 
+	if ( (ingpf.flags&(GPF_M_EVENW|GPF_M_ODDW)) && !(ingpf.bits_per_word) )
+		ingpf.bits_per_word = 16;
+	if ( ingpf.bits_per_word == 0 )
+		ingpf.bits_per_word = 8;
+	ingpf.bytes_per_word = ingpf.bits_per_word / 8;
 	if ( noisy || debug )
-		printf("Processing: %s -> %s\n", filespec, outspec );
+		printf("Processing: %s -> %s. Bytes_per_word=%d\n", filespec, outspec, ingpf.bytes_per_word );
 	if ( !outspec[0] )
 	{
 		fprintf(errFile, "No output file specified yet (use OUTPUT command first);  command ignored\n\n");
@@ -140,9 +146,6 @@ static void incmd(void)
 	if ( !(outgpf.flags & GPF_M_SYMBOL) )
 		ingpf.flags &= ~GPF_M_SYMBOL; /* lose 'em on input 					 */
 
-	if ( ingpf.bits_per_word == 0 )
-		ingpf.bits_per_word = 8;
-	ingpf.bytes_per_word = ingpf.bits_per_word / 8;
 	ingpf.rec_size      = outgpf.rec_size;
 
 	if ( !getfile(inspec, &ingpf) )
@@ -162,7 +165,7 @@ static void incmd(void)
 				   | (outgpf.flags & (GPF_M_WORD | GPF_M_FILL | GPF_M_APPND | GPF_M_SYMBOL | GPF_M_GROUP | GPF_M_NOPAD));
 
 	if ( !(ingpf.flags & GPF_M_START) ) /* if no specific start 				 */
-		ingpf.beg_add = ingpf.low_add; /* start at same plc 					 */
+		ingpf.out_add = ingpf.low_add; /* start at same plc 					 */
 
 	if ( (outgpf.flags & GPF_M_MAU) && !(ingpf.flags & GPF_M_MAU) )
 	{
@@ -184,7 +187,7 @@ static void incmd(void)
 		ingpf.high_limit = ingpf.high_add;
 	if ( (ingpf.flags & GPF_M_MOVE) )
 	{
-		relocation = ingpf.beg_add;
+		relocation = ingpf.out_add;
 		if ( (ingpf.flags&GPF_M_START) )
 			relocation -= ingpf.low_limit;
 	}
@@ -197,7 +200,8 @@ static void incmd(void)
 		printf("incmd(): calling putfile(). relocation=0x%lX, low_add=0x%lX, hi_add=0x%lX, lo_lim=0xx%lX, hi_lim=0x%lX\n",
 			   relocation, ingpf.low_add, ingpf.high_add, ingpf.low_limit, ingpf.high_limit );
 	}
-	/* note using INPUT gpf 						 						 */
+	/* note using INPUT gpf */
+	whatWeAreDoing = DOING_OUTPUT;
 	if ( !putfile(outspec, &ingpf) )
 	{
 		fprintf(errFile, "\n");     /* error text already reported 			 */
@@ -215,7 +219,8 @@ static void incmd(void)
 /*==========================================================================*/
 static void exitcmd(void)
 {
-	write_eof();                    /* close any output file 				 */
+	write_eof();                  /* close any output file 				 */
+	lclPurgeReadLineHistory();    /* purge old command line history          */
 	exit(HAPPY);                  /* back to O/S 							 */
 } /* end exitcmd */
 
@@ -286,7 +291,7 @@ int main(int argc, char *argv[])
 {
 	FILE *fin = stdin;   /* input file */
 	int opt,ef=0;
-	const char *cmdFile=NULL;
+	const char *cmdFile=NULL, *testHStr=NULL, *testNStr=NULL;
 	
 	errFile = stderr;
 #if 0
@@ -324,7 +329,7 @@ int main(int argc, char *argv[])
 	if ( argc > 0 )
 		cmdFile = *argv;
 #else
-	while ( (opt = getopt(argc, argv, "evdhqv?")) != -1 )
+	while ( (opt = getopt(argc, argv, "evdhqt:T:v?")) != -1 )
 	{
 		switch (opt)
 		{
@@ -338,6 +343,12 @@ int main(int argc, char *argv[])
 		case 'q':
 			noisy = 0;
 			break;
+		case 't':
+			testHStr = optarg;
+			break;
+		case 'T':
+			testNStr = optarg;
+			break;
 		case 'v':
 			noisy = 1;
 			break;
@@ -347,6 +358,28 @@ int main(int argc, char *argv[])
 			fputs("Usage: mixit [-dqvh?] [command_file[.mix]]\n", errFile);
 			return 1;
 		}
+	}
+	if ( testHStr )
+	{
+		int sts = strlen(testHStr);
+		uchar tmpBuf[64];
+		if ( sts > (int)sizeof(tmpBuf) )
+			sts = sizeof(tmpBuf);
+		memcpy(tmpBuf, testHStr, sts);
+		if ( (sts&1) )
+			tmpBuf[sts++] = '0';
+		sts = strtobytes(tmpBuf,sts/2);
+		printf("strtobytes() returned a %d\n",sts);
+	}
+	if ( testNStr )
+	{
+		int sts = strlen(testNStr);
+		uchar tmpBuf[64];
+		if ( sts > (int)sizeof(tmpBuf) )
+			sts = sizeof(tmpBuf);
+		memcpy(tmpBuf, testNStr, sts);
+		sts = strtohex(tmpBuf,sts);
+		printf("strtohex() returned a %d\n",sts);
 	}
 	if ( optind < argc )
 		cmdFile = argv[optind];
@@ -396,7 +429,7 @@ int main(int argc, char *argv[])
 				continue;
 
 			default:
-				fprintf(errFile, "\nLine too long; command ignored\n\n");
+				fprintf(errFile, "\nLine too long (_qaval_=%d); command ignored\n\n", _qaval_);
 				purge_qa2(fin, stdout);
 				continue;
 			};
@@ -425,10 +458,14 @@ int main(int argc, char *argv[])
 			helpcmd();
 			break;
 		case 2:
+			whatWeAreDoing = DOING_IN_CMD;
 			incmd();
+			whatWeAreDoing = DOING_UNDEFINED;
 			break;
 		case 3:
+			whatWeAreDoing = DOING_OUT_CMD;
 			outcmd();
+			whatWeAreDoing = DOING_UNDEFINED;
 			break;
 		default:
 			wasbad("Unrecognized command;  try again");

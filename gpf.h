@@ -66,14 +66,15 @@ typedef struct gpf {
 	ulong   low_add;        /* lowest address found in file */
 	ulong   high_add;       /* highest address found in file */
 	ulong   xfer_add;       /* xfer address found in the file */
-	ulong	low_limit;		/* lowest address to look for */
-	ulong	high_limit;		/* highest address to look for */
-	ulong   beg_add;        /* address to begin writing */
+	ulong	low_limit;		/* lowest address to look for (from command line) */
+	ulong	high_limit;		/* highest address to look for (from command line) */
+	ulong   out_add;        /* output file address (from command line) */
 	ushort  rec_size;       /* default output record size */
 	uchar   fill_char;      /* value to fill uninit'd bytes */
 	FileFormat rec_type;    /* file format */
 	ulong   sym_add;        /* symbol table address? */
 	ulong   sym_end;        /* symbol table end? */
+	int		recordNumber;	/* record number on files that have records */
 } GPF;                  /* this whole structure is now a GPF */
 
 extern GPF ingpf, outgpf;

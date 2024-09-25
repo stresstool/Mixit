@@ -372,7 +372,7 @@ static void deposit_data(RomRec *rrec)
 	hi              = (flag & GPF_M_END) ? ingpf.high_limit : -1;
 	if ( (flag & GPF_M_MOVE) )
 	{
-		relocation = ingpf.beg_add;
+		relocation = ingpf.out_add;
 		if ( (flag&GPF_M_START) )
 			relocation -= lo;
 	}

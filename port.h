@@ -43,8 +43,14 @@
 #define byte char
 #define word short
 #else
-#define byte char
-#define word short
+#ifndef BYTE_DEFINED
+typedef char byte;
+#define BYTE_DEFINED
+#endif
+#ifndef WORD_DEFINED
+typedef short word;
+#define WORD_DEFINED
+#endif
 #endif
 
 #ifndef BUFSIZ

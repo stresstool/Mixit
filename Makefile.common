@@ -5,12 +5,12 @@
 INCS = -I.
 
 A1 = asm.o dio.o dld.o getfile.o getform.o hexutl.o 
-A2 = image.o img.o intel.o lda.o mac.o mixit.o 
+A2 = image.o img.o intel.o lda.o lclreadline.o mac.o mixit.o 
 A3 = mot.o parser.o port2.o putfile.o qa.o rom.o 
 A4 = tekhex.o varargs.o vlda.o coff.o cpe.o elf.o err2str.o
 
 AC1 = asm.c dld.c dio.c getfile.c getform.c hexutl.c image.c
-AC2 = img.c intel.c lda.c mac.c mixit.c mot.c parser.c
+AC2 = img.c intel.c lda.c lclreadline.c mac.c mixit.c mot.c parser.c
 AC3 = port2.c putfile.c qa.c rom.c tekhex.c varargs.c vlda.c coff.c cpe.c elf.c
 
 MAKEFILE = Makefile.common
@@ -31,7 +31,7 @@ CHKS += $(EXTRA_CHKS)
 
 STD = -std=c99
 CFLAGS = $(DEFINES) $(HOST_CPU) $(INCS) $(DBG) $(OPT) $(CHKS) $(STD)
-LFLAGS = $(HOST_CPU) $(DBG)
+LFLAGS = $(HOST_CPU) $(DBG) $(EXTRA_LIBS)
 
 C = $(CC) -c $(CFLAGS)
 D = $(CC) -c $(CFLAGS)
@@ -213,6 +213,11 @@ lda.o:	formats.h
 lda.o:	hexutl.h
 lda.o:	mixit.h
 lda.o:	prototyp.h
+lclreadline.o:	lclreadline.c
+lclreadline.o:	lclreadline.h
+lclreadline.o:	mixit.h
+lclreadline.o:	qa.h
+lclreadline.o:	port.h
 mac.o:	mac.c
 mac.o:	mixit.h
 mac.o:	image.h

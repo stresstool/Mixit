@@ -7,3 +7,6 @@ extern int _qacnt_; /* global cell for number of characters read */
 
 /* error recovery for QA and QA5; flush the input buffer */
 #define purge_qa() purge_qa2( stdin, stdout )
+
+extern void purgeHistory(void);
+

@@ -163,8 +163,8 @@ int GetRec_cpe(InRecord *record)
 		return record->recType = REC_EOF;
 	case 1:
 		{
-			unsigned long addr;
-			unsigned long len;
+			unsigned long addr=0;
+			unsigned long len=0;
 			int sts;
 			if ( readl(&addr, record->recFile) )
 				goto read_error;

@@ -18,13 +18,13 @@
 
 	3)  32-bit mode, where the format is:
 
-	08,1C,3E,6B,08,00,cccccccc,FF,data...,00,00,ssss
+	08,1C,3E,6B,08,00,0c,0c,0c,0c,0c,0c,0c,0c,FF,data...,00,00,ss,ss
 
-	where cccccccc is the 4-byte count of data,
-	and       ssss is the 2-byte checksum.
+	where cccccccc is the 32 bit count of data split into the low 4 bit nibbles of 8 bytes, big endian (total of a 15 byte header)
+	and       ss,ss is the 2-byte checksum, big endian
 
 
-	On the VAX, all the DIO files begin with a CR, then the 15-byte header,
+	On all systems the DIO files begin with a CR (0x0D) followed by the 15-byte header,
 	etc.
 
 	Copyright 1993 Atari Games.  All rights reserved.
@@ -37,7 +37,10 @@
 			with recsize not a multiple of 512. Also it didn't
 			pad the file to match the length specified in the
 			header. Made it a little faster.
-			
+
+25-sep-2024 TG Fixed checksum handling on both input and output.
+
+25-sep-2024	DMS Fixed the comments above.
 ---------------------------------------------------------------------------
 	Known bugs/features/limitations:
 
@@ -67,6 +70,8 @@ extern GPF	*gpf;
 /*==========================================================================*/
 int GetRec_dio(InRecord *rec)
 {
+	uchar *bp;
+	static ushort	file_cksum = 0;
 	static ushort	checksum = 0;
 	static long		byteCount = 0;
 	size_t			len, dataSize;
@@ -111,8 +116,8 @@ int GetRec_dio(InRecord *rec)
 				goto problem;
 
 			/* Save the count of bytes to read in */
-			for ( dataSize = i = 0; i < (int)len; ++i )
-				dataSize = (dataSize << 4) + (count[i] & 7);
+			for ( dataSize = i = 0; i < 8 /*(int)len*/; ++i )
+				dataSize = (dataSize << 4) + (count[i] & 0xF);
 
 			/* Check for the RUBOUT byte */
 			if ( count[i] != 0xFF )
@@ -129,12 +134,14 @@ int GetRec_dio(InRecord *rec)
 		if ( fread(count, 1, 4, rec->recFile) == 0 || count[0] || count[1] )
 			goto problem;
 
-		/* dataSize now contains checksum */
-		dataSize = (count[2] << 8) | count[3];
-		if ( dataSize != checksum )
+		/* file_cksum now contains checksum */
+		file_cksum = (count[2] << 8) | count[3];
+		if ( file_cksum != checksum )
 		{
+			printf("Checksum Error - File Checksum = %X   Calculated Checksum = %X\n", file_cksum, checksum);
 			rec->recLen  = 0;
 			checksum = 0;
+			file_cksum = 0;
 			byteCount = 0;
 			return (rec->recType = REC_ERR);
 		}
@@ -149,9 +156,32 @@ int GetRec_dio(InRecord *rec)
 		rec->recSAddr += rec->recLen;
 		rec->recLen  = len;
 		rec->recEAddr = rec->recSAddr+rec->recLen-1;
-		checksum    += len;
+
+		/* Compute the checksum */
+		for ( bp = rec->recBuf, i = 0; i < len; ++i )
+			checksum += *bp++;
+
 		if ( byteCount != 0x7FFFFFFFL )
 			byteCount -= len;
+
+		if ( byteCount < 0 )
+		{
+			for ( i = 0; i < 4; ++i )
+				checksum -= *--bp;
+
+			file_cksum = (*(bp+2) << 8) | *(bp+3);
+			if ( file_cksum != checksum )
+			{
+				printf("Checksum Error - File Checksum = %X   Calculated Checksum = %X\n", file_cksum, checksum);
+				rec->recLen  = 0;
+				checksum = 0;
+				file_cksum = 0;
+				byteCount = 0;
+				return (rec->recType = REC_ERR);
+			}
+
+		}
+
 		return (rec->recType = REC_DATA);
 	}
 

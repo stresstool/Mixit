@@ -12,7 +12,7 @@
 		Version="1"
 		OutputFile="%bdmixit"
 		CompilerConfigName="Latest Version"
-		Defines='"/DLINUX" "/D_LANGUAGE_C" "/D_ISOC99_SOURCE" "/D_XOPEN_SOURCE"'>
+		Defines='"/DLINUX" "/D_LANGUAGE_C" "/D_ISOC99_SOURCE" "/D_XOPEN_SOURCE" "/DUSE_READLINE"'>
 		<Menu>
 			<Target
 				Name="Compile"
@@ -38,7 +38,7 @@
 				RunFromDir="%rw">
 				<Exec
 					CmdLine='gcc %xup -g -Wall -pedantic -Werror %~other -o "%o" %objs'
-					OtherOptions="-m32"/>
+					OtherOptions="-m32 -lreadline"/>
 			</Target>
 			<Target
 				Name="Build"
@@ -146,7 +146,7 @@
 		Version="1"
 		OutputFile="%bdmixit"
 		CompilerConfigName="Latest Version"
-		Defines="">
+		Defines='"/DLINUX" "/D_LANGUAGE_C" "/D_ISOC99_SOURCE" "/D_XOPEN_SOURCE" "/DUSE_READLINE"'>
 		<Menu>
 			<Target
 				Name="Compile"
@@ -157,7 +157,9 @@
 				OutputExts="*.o"
 				SaveOption="SaveCurrent"
 				RunFromDir="%rw">
-				<Exec CmdLine='gcc -c %xup -ansi %defd -o "%bd%n%oe" %i %f'/>
+				<Exec
+					CmdLine='gcc -c %xup -ansi %defd %~other -o "%bd%n%oe" %i %f'
+					OtherOptions="-m32"/>
 			</Target>
 			<Target
 				Name="Link"
@@ -168,7 +170,9 @@
 				Deletable="0"
 				SaveOption="SaveCurrent"
 				RunFromDir="%rw">
-				<Exec CmdLine='gcc %xup -o "%o" %objs'/>
+				<Exec
+					CmdLine='gcc %xup %~other -o "%o" %objs'
+					OtherOptions="-m32 -lreadline"/>
 			</Target>
 			<Target
 				Name="Build"
@@ -287,6 +291,7 @@
 			<F N="image.c"/>
 			<F N="img.c"/>
 			<F N="intel.c"/>
+			<F N="lclreadline.c"/>
 			<F N="lda.c"/>
 			<F N="mac.c"/>
 			<F N="mixit.c"/>
@@ -312,6 +317,7 @@
 			<F N="gpf.h"/>
 			<F N="hexutl.h"/>
 			<F N="image.h"/>
+			<F N="lclreadline.h"/>
 			<F N="mixit.h"/>
 			<F N="port.h"/>
 			<F N="prototyp.h"/>

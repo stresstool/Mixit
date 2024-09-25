@@ -37,11 +37,11 @@ void err_exit(char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf( errFile, "\nERROR: " );
+	fprintf( errFile, "ERROR: " );
 	va_start( ap, fmt );
 	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fprintf( errFile, "\n \n" );
+	fprintf( errFile, "\n" );
 	exit(-1);
 
 } /* end err_exit */
@@ -89,11 +89,11 @@ int err_return(int ret, char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf( errFile, "\nERROR: " );
+	fprintf( errFile, "ERROR: " );
 	va_start( ap, fmt );
 	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fprintf( errFile, "\n \n" );
+	fprintf( errFile, "\n" );
 	return ret;
 } /* end err_return */
 
@@ -120,11 +120,15 @@ void moan(char *fmt, ...)
 {
 	va_list ap;
 
-	fprintf( errFile, "\nERROR: " );
+	if ( whatWeAreDoing == DOING_IN_CMD && inspec[0] )
+		fprintf(errFile, "%d:%s\n", ingpf.recordNumber, inspec);
+	else if ( whatWeAreDoing == DOING_OUTPUT && outspec[0] )
+		fprintf(errFile, "%d:%s\n", outgpf.recordNumber, outspec);
+	fprintf(errFile, "ERROR: ");
 	va_start( ap, fmt );
 	vfprintf( errFile, fmt, ap );
 	va_end(ap);
-	fprintf( errFile, "\n \n" );
+	fprintf( errFile, "\n" );
 	fflush( errFile );
 
 } /* end moan */

@@ -19,9 +19,6 @@ static int	qualbad(int input_parse, GPF *gpfp);
 /* global to these routines 			 */
 extern char ttybuf[BUFSIZ], *ttp;   /* cmd buf & remainder ptr 				 */
 extern char token[BUFSIZ];      /* current token and its work pointer 	 */
-extern BUF  inspec;                 /* accepted file specs for MIXIT routines*/
-extern GPF  outgpf;                 /* environment for getfile() / putfile() */
-extern BUF  filespec;               /* filespec we will collect EXACTLY one of*/
 
 static ulong num;                   /* value found by numbad()|valbad() 	 */
 
@@ -196,7 +193,7 @@ static int addrbad(GPF *gpfp)     /* name was eaten, but not ':' or '=' 	 */
 				break;
 
 			case 2:             /* OUTPUT 								 */
-				gpfp->beg_add    = num;
+				gpfp->out_add    = num;
 				gpfp->flags |= GPF_M_MOVE;
 				break;
 
@@ -241,7 +238,7 @@ static int addrbad(GPF *gpfp)     /* name was eaten, but not ':' or '=' 	 */
 
 		if ( numbad('x') )
 			return 1;
-		gpfp->beg_add = num;
+		gpfp->out_add = num;
 		gpfp->flags |= GPF_M_MOVE;
 		return addrnfg(gpfp);     /* one way or another 					 */
 	}                           /* end of short form 					 */

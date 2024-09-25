@@ -106,7 +106,7 @@ int getfile(char *fname, GPF *gpf)
 	relocation		= 0;
 	if ( (flag & GPF_M_MOVE) )
 	{
-		relocation = ingpf.beg_add;
+		relocation = ingpf.out_add;
 		if ( (flag&GPF_M_START) )
 			relocation -= lo;
 	}
@@ -186,6 +186,7 @@ int getfile(char *fname, GPF *gpf)
 			break;
 		}
 #endif
+		++gpf->recordNumber;	/* count the record (first record is 1) */
 		switch ((*GetRec)(&rec))
 		{
 		case REC_DATA:
@@ -203,7 +204,7 @@ int getfile(char *fname, GPF *gpf)
 		case REC_UNKNOWN:
 			continue;
 		case REC_ERR:
-			moan("Error on record %d", reccnt);
+			moan("getfile(): Error on record", reccnt);
 			status = 0;
 			break;
 		case REC_EOF:
