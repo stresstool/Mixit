@@ -23,7 +23,7 @@ ifeq ($(MSYS2),1)
 	EXE = .exe
 endif
 
-DEFINES = -DLINUX -D_LANGUAGE_C -D_ISOC99_SOURCE -D_XOPEN_SOURCE -DHAS_STRERROR
+DEFINES = -DLINUX -D_LANGUAGE_C -D_ISOC99_SOURCE -D_XOPEN_SOURCE -DHAS_STRERROR -D_GNU_SOURCE
 DEFINES += $(EXTRA_DEFINES)
 
 CHKS = -Wall -pedantic -ansi -Wno-char-subscripts
@@ -78,9 +78,17 @@ endif
 
 ALLDS = $(patsubst %.o,%.d,$(A1) $(A2) $(A3) $(A4))
 
+default: mixit$(EXE) splitter$(EXE)
+
 mixit$(EXE): $(A1) $(A2) $(A3) $(A4) $(MAKEFILE)
-	$(ECHO)  $(DELIM)    linking...$(DELIM)
+	$(ECHO)  $(DELIM)    linking $@ ...$(DELIM)
 	$L $(LFLAGS) -o $@ $(A1) $(A2) $(A3) $(A4)
+
+splitter$(EXE): splitter.o $(MAKEFILE)
+	$(ECHO)  $(DELIM)    linking $@ ...$(DELIM)
+	$L $(LFLAGS) -o $@ $<
+
+splitter.o: splitter.c $(MAKEFILE)
 
 test:
 	@$(ECHO)  $(DELIM)ALLDS = $(ALLDS)$(DELIM)

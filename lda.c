@@ -228,8 +228,7 @@ int PutRec_lda(FILE *file, uchar *data, int recsize, ulong recstart)
 
 	send_a_byte(-(j = cksum), file, (uint *)&j);
 	/* Keep track of buffered data for flushing at end*/
-	if ( (buffered_bytes += recbytes + 1) >= 512 )
-		buffered_bytes %= 512;
+	buffered_bytes += recbytes + 1;
 
 	return 1;
 
@@ -241,17 +240,23 @@ int PutRec_lda(FILE *file, uchar *data, int recsize, ulong recstart)
  *==========================================================================*/
 int PutFoot_lda(FILE *file)
 {
-	uchar   data[512];
 	int     rv;
-
-	buffered_bytes = 0;
+	uchar   data[1];
 
 	rv = PutRec_lda(file, data, 0, 0L);
 
-	/* Fill out to the nearest 512-byte record */
-	while ( buffered_bytes++ < 512 )
-		fputc(0, file);
-
+#ifdef VMS
+	buffered_bytes %= 512;
+	if ( buffered_bytes )
+	{
+		/* Fill out to the nearest 512-byte record */
+		while ( buffered_bytes < 512 )
+		{
+			fputc(0, file);
+			++buffered_bytes;
+		}
+	}
+#endif
 	return rv;
 
 } /* end PutFoot_lda */

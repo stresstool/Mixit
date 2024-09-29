@@ -29,7 +29,7 @@
 typedef enum FILE_TYPES
 {
 	GPF_K_UNKNOWN,	/* Undefined */
-	GPF_K_LDA,		/* RT11 .LDA (16 bit addresses, I/O binary) */
+	GPF_K_LDA,		/* RT11 .LDA (16 and 32 bit addresses, I/O binary) */
 	GPF_K_ROM,		/* mixit .ROM (I/O ASCII) */
 	GPF_K_MAC,		/* macxx .MAC (O only ASCII)*/
 	GPF_K_HEX,		/* TekHex .HEX (I/O ASCII) */
@@ -40,8 +40,8 @@ typedef enum FILE_TYPES
 	GPF_K_MOT,		/* Motorola .MOT (I/O ASCII) */
 	GPF_K_DUMP,		/* mixit dump .DUMP, .DUM or .DMP (O only same as IMG) */
 	GPF_K_DIO,		/* Atari DataIO .DIO (I/O binary) */
-	GPF_K_COFF,		/* Generic COFF .COFF (I/O binary) */
-	GPF_K_ELF,		/* Generic ELF .ELF (I/O binary) */
+	GPF_K_COFF,		/* Generic COFF .COFF (I only binary) */
+	GPF_K_ELF,		/* Generic ELF .ELF (I only binary) */
 	GPF_K_CPE,		/* Sony Playstation .CPE (I/O binary) */
 	GPF_K_IMG = 127	/* Anything else is assumed image format (I/O binary) */
 } FileFormat;

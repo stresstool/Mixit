@@ -63,7 +63,8 @@ int PutHead_mac( FILE *file, ulong addr, ulong hi )
 {
 	int i;
 
-	fprintf( file, "\n\n; File name = %s\n\n", current_fname);
+	if ( !noDate )
+		fprintf(file, "\n\n; File name = %s\n\n", current_fname);
 	for( i=0; header[i]; ++i )
 		fprintf( file, "%s\n", header[i]);
 

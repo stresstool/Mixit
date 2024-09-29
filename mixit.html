@@ -108,10 +108,10 @@ filetypes, if defaulted, are expected to be lowercase on *nix systems.
     <tr><td>.LDA</td><td>binary</td><td>DEC defined stream of bytes (I/O).&nbsp;<a href="#LDA_Format">DETAILS</a></td></tr>
     <tr><td>.VLDA</td><td>binary</td><td>Atari defined byte stream (I/O).&nbsp;<a href="#VLDA_Format">DETAILS</a></td></tr>
     <tr><td>.DIO</td><td>binary</td><td>DataIO defined byte stream (I/O).&nbsp;<a href="#DIO_Format">DETAILS</a></td></tr>
-    <tr><td>.COFF</td><td>binary</td><td>Generic COFF defined byte stream (I/O)</td></tr>
-<!--    <tr><td>.ELF</td><td>binary</td><td>Generic ELF defined byte stream (I/O)</td></tr> -->
+    <tr><td>.COFF</td><td>binary</td><td>Generic COFF defined byte stream (I only)</td></tr>
+    <tr><td>.ELF</td><td>binary</td><td>Generic ELF defined byte stream (I only)</td></tr>
     <tr><td>.CPE</td><td>binary</td><td>Sony Playstation 1 (I/O).&nbsp;<a href="#CPE_Format">DETAILS</a></td></tr>
-    <tr><td>all others</td><td>binary</td><td>256 byte fixed length records (I/O)</td></tr>
+    <tr><td>all others</td><td>binary</td><td>Plain byte stream (I/O)</td></tr>
   </table>
 
 <h2>Commands</h2>
@@ -149,7 +149,7 @@ previously written data.
 </p>
 <h5>/MODE=x</h5>
 <p>
-Mode specifies the type of output addressing that should be used. It 
+<!-- Mode specifies the type of output addressing that should be used. It 
 basically specifies whether or not the output load addresses are 
 relative to bytes or to words. Hence the <b>x</b> parameter can be
   either the text <b>WORD</b> or <b>BYTE</b> (the default). This 
@@ -158,7 +158,8 @@ that is NOT byte addressable. For example, if you had to create an .LDA
 file to be loaded by a 32 bit processor that could only address to the 
 granularity of 32 bit words, you would specify <b>/MODE=WORD/WORD_SIZE=32</b>.
 There would then be 4 bytes of data for each address specified by the
-.LDA file load address argument.
+.LDA file load address argument. -->
+    Mode flag is ignored on output.
 </p>
 <h5>/WORD_SIZE=n</h5>
 <p>
@@ -166,6 +167,9 @@ Word_size specifies the size of each output word in bits.
 The argument <b>n</b> is assumed to be a DECIMAL number but can be expressed
 as hex or octal by prefixing a %X or %O respectively. The default word 
 size is 8.  It can only resolve to one of (decimal) 8, 16, 24 or 32.
+</p>
+<p>
+  <b><i>NOTE:</i></b>It is recommended NOT  to use WORD_SIZE on the OUT command. Instead use it only on IN commands.
 </p>
 <h5>/GROUP=n</h5>
 <p>
@@ -267,6 +271,10 @@ relative to bytes or to words. Hence the <b>x</b> parameter can be
 It would mean there would be 4 bytes of data for each address specified by the
 record in the input file.
 </p>
+    <p>
+    <b><i>NOTE:</i></b>The MODE flag is ignored for all imputs except <b>coff</b> and <b>elf</b> types.
+    Add to that, <b>coff</b> and <b>elf</b> formats are input only as of this writing.
+    </p>
 <h5>/WORD_SIZE=n</h5>
 <p>
 Word_size specifies the size of each input word in bits.
@@ -301,6 +309,12 @@ high address limits (if any) are filled. Use caution with this option when tryin
 to overlay ASCII and binary type files because the fill may overlay
 previously written data. 
 </p>
+<h5>/EVEN<br>/ODD</h5>
+<p>
+    These two flags can be used instead of WORD_SIZE=16 and GROUP flags. Note if those
+    two flags are provided, the EVEN/ODD flags are ignored. EVEN means default the
+    WORD_SIZE=16 and GROUP=0 where ODD means default the WORD_SIZE=16 and GROUP=8.
+</p>    
 <h3 id="hlpCmd">HELP command</h5>
 <p>
   Point your browser to the <a href="file://mixit.html" target="_blank">MIXIT.HTML</a> file wherever it may be found.

@@ -42,7 +42,8 @@ int GetRec_asm(InRecord *rec)
  *==========================================================================*/
 int PutHead_asm( FILE *file, ulong addr, ulong hi )
 {
-	fprintf( file, "* File name = %s\n\n", current_fname);
+	if ( !noDate )
+		fprintf(file, "* File name = %s\n\n", current_fname);
 	fprintf( file, "MIXIT_BEGIN:\n");
 
 	base_address = addr;

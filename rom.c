@@ -653,14 +653,17 @@ int PutRec_rom(FILE *file, uchar *data, int recsize, ulong recstart)
  *==========================================================================*/
 int PutHead_rom(FILE *file, ulong addr, ulong hi)
 {
-	time_t      aclock = (time_t)addr;
-	struct tm   *newtime;
-
-	time(&aclock);
-	newtime = localtime(&aclock);
-	fprintf(file, "; ROM/PROM data file created via Mixit %s %s\n", REVISION, asctime(newtime));
-
-	fprintf(file, "; File name = %s\n\n", current_fname);
+	if ( !noDate )
+	{
+		time_t      aclock = (time_t)addr;
+		struct tm   *newtime;
+	
+		time(&aclock);
+		newtime = localtime(&aclock);
+		fprintf(file, "; ROM/PROM data file created via Mixit %s %s\n", REVISION, asctime(newtime));
+	
+		fprintf(file, "; File name = %s\n\n", current_fname);
+	}
 
 	return 1;
 

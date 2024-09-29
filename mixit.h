@@ -57,6 +57,7 @@ typedef unsigned long		LogicalAddr;
 
 extern int noisy;
 extern int debug;
+extern int noDate;
 
 #define DOING_UNDEFINED	(0)
 #define DOING_IN_CMD	(1)

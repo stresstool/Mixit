@@ -74,7 +74,7 @@ int GetRec_dio(InRecord *rec)
 	static ushort	file_cksum = 0;
 	static ushort	checksum = 0;
 	static long		byteCount = 0;
-	size_t			len, dataSize;
+	size_t			len, lclRecLen, dataSize;
 	int				i;
 	uchar			byte, arrow[5],
 		a16[] = { 0x1C, 0x2A, 0x49, 0x08, 0x00 },
@@ -151,11 +151,14 @@ int GetRec_dio(InRecord *rec)
 	}
 
 	rec->recData = rec->recBuf;
-	if ( (len = fread(rec->recBuf, 1, rec->recBufLen, rec->recFile)) > 0 )
+	lclRecLen = rec->recBufLen;
+	if ( lclRecLen > byteCount )
+		lclRecLen = byteCount;		/* Don't read more 'data' than is in the file (i.e. don't include the 4 checksum bytes here) */
+	if ( (len = fread(rec->recBuf, 1, lclRecLen, rec->recFile)) > 0 )
 	{
-		rec->recSAddr += rec->recLen;
-		rec->recLen  = len;
-		rec->recEAddr = rec->recSAddr+rec->recLen-1;
+		rec->recSAddr += rec->recLen;	/* Advance address from last read size */
+		rec->recLen  = len;				/* remember current read size for next time */
+		rec->recEAddr = rec->recSAddr+rec->recLen-1; /* new last address */
 
 		/* Compute the checksum */
 		for ( bp = rec->recBuf, i = 0; i < len; ++i )
@@ -164,6 +167,7 @@ int GetRec_dio(InRecord *rec)
 		if ( byteCount != 0x7FFFFFFFL )
 			byteCount -= len;
 
+#if 0	/* Should never get here now */
 		if ( byteCount < 0 )
 		{
 			for ( i = 0; i < 4; ++i )
@@ -179,8 +183,8 @@ int GetRec_dio(InRecord *rec)
 				byteCount = 0;
 				return (rec->recType = REC_ERR);
 			}
-
 		}
+#endif
 
 		return (rec->recType = REC_DATA);
 	}

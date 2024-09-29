@@ -17,6 +17,7 @@ BUF 	filespec;               /* filespec we will collect EXACTLY one of 	 */
 GPF 	ingpf, outgpf;          /* environment for getfile() / putfile() 	 */
 int 	debug;                     /* Debug flag 								 */
 FILE *errFile;
+int		noDate;
 
 extern FILE *fout;              /* Current output file (NULL if none open) 	 */
 /* parsing constructs 						 */
@@ -329,7 +330,7 @@ int main(int argc, char *argv[])
 	if ( argc > 0 )
 		cmdFile = *argv;
 #else
-	while ( (opt = getopt(argc, argv, "evdhqt:T:v?")) != -1 )
+	while ( (opt = getopt(argc, argv, "evdhnqt:T:v?")) != -1 )
 	{
 		switch (opt)
 		{
@@ -339,6 +340,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'd':
 			debug = 1;
+			break;
+		case 'n':
+			noDate = 1;
 			break;
 		case 'q':
 			noisy = 0;
@@ -355,7 +359,17 @@ int main(int argc, char *argv[])
 		case 'h':
 		case '?':
 		default: /* '?' */
-			fputs("Usage: mixit [-dqvh?] [command_file[.mix]]\n", errFile);
+			fputs("Usage: mixit [-edhnqv?] [command_file[.mix]]\n"
+                  "Where:\n"
+				  "-e    - redirect all stderr to stdout\n"
+				  "-d    - set debug mode (lots of output)\n"
+				  "-h    - this message\n"
+				  "-n    - don't include a date code in .rom output file\n"
+				  "-q    - turns off verbose mode\n"
+				  "-v    - turns on verbose mode\n"
+				  "[command_file] - optional file containing commands. Defaults to type .mix.\n"
+				  "If no command_file provided, runs in interactive mode.\n"
+				  ,stdout);
 			return 1;
 		}
 	}

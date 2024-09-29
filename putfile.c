@@ -447,7 +447,12 @@ int putfile(char *fname, GPF *gpf)
 		}
 		else if ( bytes )
 		{
+			/* FYI: The contents of buffer have already been relocated by the input function(s) */
+			/* I.e. gpf->low_limit has been set to gpf->out_add before we get here */
 			inpOffset = lo - gpf->low_limit;
+			if ( lo + bytes > hi_range+1 )
+				bytes = (hi_range+1)-lo;	/* clip to the end of data (padding, if desired, happens below) */
+			/* FYI: The data stored in memory remains byte orientated. If word_size is not 8, the output address and data remain to be converted */
 			outAddr = inpOffset / gpf->bytes_per_word + gpf->out_add;
 			/* Do any required conversions of the input and return the number of bytes to output */
 			outCount = mungBuffer(gpf,buffer,bytes,inpOffset);
@@ -461,8 +466,8 @@ int putfile(char *fname, GPF *gpf)
 				if ( debug )
 				{
 					int ii;
-					printf("Output %ld: %d %d-byte record(s), asked 0x%lX-0x%lX, found 0x%lX-0x%lX, output to 0x%lX-0x%lX\n\t",
-						   rec_count, outCount / rBytes, rBytes,
+					printf("Output %ld: 1 %d-byte record, asked 0x%lX-0x%lX, found 0x%lX-0x%lX, output to 0x%lX-0x%lX\n\t",
+						   rec_count, outCount,
 						   lo_ask, lo_ask + bytes - 1,
 						   lo, lo+bytes-1,
 						   outAddr, outAddr+outCount-1);
