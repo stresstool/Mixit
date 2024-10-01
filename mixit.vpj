@@ -322,7 +322,7 @@
 			<F N="port.h"/>
 			<F N="prototyp.h"/>
 			<F N="qa.h"/>
-			<F N="testsuite/test.sh"/>
+			<F N="test.sh"/>
 			<F N="version.h"/>
 		</Folder>
 		<Folder

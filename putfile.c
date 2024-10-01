@@ -88,13 +88,15 @@ rec_count = 0;
 
 static int openOutput(const char *fname, const GPF *gpf)
 {
+	const char *fopenArg=NULL;
+	
 	switch (gpf->rec_type)
 	{
 	case GPF_K_VLDA:    /* Atari .VLDA or .VLD (32 bit addresses: I/O binary) */
-		fout = fopen(fname, FOPEN_ARG_VLDA);
+		fopenArg = FOPEN_ARG_VLDA;
 		break;
 	case GPF_K_DIO:     /* Atari DataIO .DIO (I/O binary) */
-		fout = fopen(fname, FOPEN_ARG_APPND);
+		fopenArg = FOPEN_ARG_APPND;
 		break;
 	case GPF_K_DUMP:    /* mixit dump .DUMP: .DUM or .DMP (O only same as IMG) */
 	case GPF_K_IMG:     /* Anything else is assumed image format (I/O binary) */
@@ -102,7 +104,7 @@ static int openOutput(const char *fname, const GPF *gpf)
 	case GPF_K_COFF:    /* Generic COFF .COFF (I/O binary) */
 	case GPF_K_ELF:     /* Generic ELF .ELF (I/O binary) */
 	case GPF_K_CPE:     /* Sony Playstation .CPE (I/O binary) */
-		fout = fopen(fname, FOPEN_ARG_IMG);
+		fopenArg = FOPEN_ARG_IMG;
 		break;
 	case GPF_K_ROM:     /* mixit .ROM (I/O ASCII) */
 	case GPF_K_MAC:     /* macxx .MAC (O only ASCII)*/
@@ -112,12 +114,20 @@ static int openOutput(const char *fname, const GPF *gpf)
 	case GPF_K_INTEL:   /* Intel .INTEL (I/O ASCII) */
 	case GPF_K_MOT:     /* Motorola .MOT (I/O ASCII) */
 	default:
-		fout = fopen(fname, FOPEN_ARG_TXT);
+		fopenArg = FOPEN_ARG_TXT;
 		break;
 	}
-	if ( !fout )
+	if ( fopenArg )
 	{
-		return perr_return(0, "Can't open '%s'",  fname);
+		fout = fopen(fname, fopenArg);
+		if ( !fout )
+		{
+			return perr_return(0, "Failed fopen('%s','%s')",  fname, fopenArg);
+		}
+	}
+	else
+	{
+		return err_return(0, "Failed to fopen('%s',NULL). No fopen argument. rec_type=%d", gpf->rec_type);
 	}
 	return 1;
 }
@@ -174,6 +184,7 @@ static int swap_data(uchar *dest, int count, int bytes_per_word)
 	return dest-dstSav;
 } /* end swap_data */
 
+#if 0
 /*==========================================================================*
  *  evenodd_data  - Handles the /EVEN_WORDS and /ODD_WORDS options by copying
  *		  a source array to a destination array, but only copying the
@@ -207,12 +218,13 @@ static int evenodd_data(uchar *dest, uchar *src, int count, short bytes_per_word
 	}
 	return dest-dstSav;
 } /* end evenodd_data */
+#endif
 
 
 static int mungBuffer(GPF *gpf, uchar *dstBuf, int bufLen, ulong inpAddr)
 {
 	/* Mung the entire input buffer according to the flags */
-	if ( (gpf->flags & (GPF_M_GROUP|GPF_M_SWAP|GPF_M_EVENW|GPF_M_ODDW)) )
+	if ( (gpf->flags & (GPF_M_GROUP|GPF_M_SWAP)) )
 	{
 		if ( (gpf->flags & GPF_M_GROUP) )
 		{
@@ -222,6 +234,7 @@ static int mungBuffer(GPF *gpf, uchar *dstBuf, int bufLen, ulong inpAddr)
 		{
 			bufLen = swap_data(dstBuf, bufLen, gpf->bytes_per_word);
 		}
+#if 0
 		else if ( (gpf->flags & (GPF_M_EVENW | GPF_M_ODDW)) )
 		{
 			int jj;
@@ -229,6 +242,7 @@ static int mungBuffer(GPF *gpf, uchar *dstBuf, int bufLen, ulong inpAddr)
 			jj = jj ^ ((gpf->flags & GPF_M_ODDW) != 0);
 			bufLen = evenodd_data(dstBuf, dstBuf, bufLen, 2, jj);
 		}
+#endif
 	}
 	return bufLen;
 }

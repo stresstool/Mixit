@@ -127,8 +127,18 @@ static void incmd(void)
 	if ( ioparsebad(1, initgpf(&ingpf)) )
 		return;
 
-	if ( (ingpf.flags&(GPF_M_EVENW|GPF_M_ODDW)) && !(ingpf.bits_per_word) )
+	if ( (ingpf.flags&(GPF_M_EVENW|GPF_M_ODDW)) )
+	{
+		if ( (ingpf.bits_per_word && ingpf.bits_per_word != 16) || (ingpf.flags&GPF_M_GROUP))
+		{
+			fprintf(errFile,"ERROR: -even or -odd cannot be used with word_size != 16 or with -group flag\n");
+			return;
+		}
+		ingpf.group_code = (ingpf.flags & GPF_M_EVENW) ? 0 : 1;
 		ingpf.bits_per_word = 16;
+		ingpf.flags |= GPF_M_GROUP;
+		ingpf.flags &= ~(GPF_M_EVENW|GPF_M_ODDW);
+	}
 	if ( ingpf.bits_per_word == 0 )
 		ingpf.bits_per_word = 8;
 	ingpf.bytes_per_word = ingpf.bits_per_word / 8;

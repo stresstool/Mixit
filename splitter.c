@@ -12,11 +12,10 @@ typedef unsigned short U16;
 
 typedef enum
 {
-	OPT_INADDR=1,
-	OPT_OUTADDR,
-	OPT_WORD_SIZE,
-	OPT_BYTE,
-	OPT_OUT_SIZE,
+	OPT_IN_SKIP=1,
+	OPT_OUT_SKIP,
+	OPT_BYTE_SKIP,
+	OPT_COUNT,
 	OPT_FILL,
 	OPT_HELP,
 	OPT_IN_FILE,
@@ -27,42 +26,44 @@ typedef enum
 static struct option long_options[] = {
    {"infile",	required_argument,	0,  OPT_IN_FILE },
    {"outfile",	required_argument,	0,  OPT_OUT_FILE },
-   {"inaddr",	required_argument,	0,  OPT_INADDR },
-   {"outaddr",	required_argument,	0,  OPT_OUTADDR },
-   {"word_size",required_argument,	0,  OPT_WORD_SIZE },
-   {"byte",		required_argument,	0,	OPT_BYTE },
-   {"out_size",	required_argument,	0,	OPT_OUT_SIZE },
+   {"inskip",	required_argument,	0,  OPT_IN_SKIP },
+   {"outskip",	required_argument,	0,  OPT_OUT_SKIP },
+   {"byteskip",	required_argument,	0,	OPT_BYTE_SKIP },
+   {"count",	required_argument,	0,	OPT_COUNT },
    {"fill",		required_argument,	0,	OPT_FILL },
    {"help",		no_argument,		0,	OPT_HELP },
    {NULL,		0,					0,	0 }
 };
 
-unsigned char buff[65536*2];
+unsigned char buff[8192];
 
 static int help_em(const char *name)
 {
 			fprintf(stderr, "Usage: %s [opts]\n"
 					"Where: (NOTE: For all the 'n' below, they may be expressed as hex by prefixing a 0x)\n"
-					"Input is expected from stdin, output is directed to stdout. Errors are directed to stderr.\n"
-					"--infile=path   - Optional path to input file (default is stdin on Linux; required parameter on Windows)\n"
-					"--outfile=path  - Optional path to output file (default is stdout on Linux; required parameter on Windows)\n"
-					"--inaddr=n      - set the input file offset in bytes (default is 0)\n"
-					"--outaddr=n     - set the output file offset in bytes (default is 0; NOTE below)\n"
-					"--word_sizez=n  - sets the word_size (default is 8; Can only be 8, 16, 24 or 32\n"
-					"--byte=n        - selects which byte when word_size != 8. Can only be 0, 1, 2 or 3 for word_sizes of 8, 16, 24 and 32 respectively.\n"
-					"                - I.e. if word_size==16, then --byte can be 0 or 1 for even or odd\n"
-					"--out_size=n    - sets max number of bytes written to output\n"
-					"--fill=n        - sets the output fill character (defaults to 0)\n"
-					"--help          - this message\n"
+					"On Linux, Input is expected from stdin, output is directed to stdout. Errors are directed to stderr.\n"
+					"-i, --infile=path   - Optional path to input file. (Default is stdin on Linux; required parameter on Windows.)\n"
+					"-o, --outfile=path  - Optional path to output file. (Default is stdout on Linux; required parameter on Windows.)\n"
+					"-s, --inskip=n      - Set the number of bytes to skip on input. (Default is 0.)\n"
+					"-S, --outskip=n     - Set the number of bytes to pre-fill output with fill character before beginning to copy input. (Default is 0.)\n"
+					"-b, --byteskip=n    - Set the number of input bytes to skip while copying to output. (Can only be 1, 2, 3 or 4; see NOTE below.)\n"
+					"-c, --count=n       - Sets max number of bytes to write to output not including any outskip. If larger than can be provided by input, it will fill.\n"
+					"-f, --fill=n        - Sets the output fill character. Output bytes skipped will be filled. (Defaults to 0.) \n"
+					"-h,-?, --help       - This message\n"
 					"\n"
-					"NOTE: the outaddr is always the BYTE offset in the output file and will not\n"
-					"follow that of the input if word_size != 8. Be sure to account for word_size\n"
-					"when computing a respective outaddr.\n"
+					"NOTE: Use byteskip to split a multi-byte per word input into a smaller one. I.e. byteskip=2 converts a 16 bit\n"
+					"file by outputting every other byte. Using byteskip=3 copies every third byte, etc. To select the starting\n"
+					"byte, use the --inskip option. I.e. with --byteskip=2 --inskip=1 (or any odd address) will output just the odd\n"
+					"bytes of the input.\n"
 					"\n"
 					"Some examples:\n"
-					"%s < foo > bar   # Will simply copy file foo to bar without changes\n"
-					"%s --inaddr=0x100 < foo > bar # Will skip the first 256 bytes of foo and copy the rest to bar\n"
-					"%s --inaddr=0x200 --outadd=0x80 --word_size=16 --byte=1 < foo > bar # will copy odd bytes of foo to bar\n"
+					"# Will simply copy file foo to bar without changes:\n"
+					"%s < foo > bar\n"
+					"# Will skip the first 256 bytes of foo and copy the rest to bar:\n"
+					"%s --inskip=0x100 < foo > bar\n"
+					"# Will first fill 128 bytes of bar with the fill character, then beginning with the 0x201's byte on input, copy the\n"
+					"# remaining odd bytes of foo to bar:\n"
+					"%s --inskip=0x201 --outskip=0x80 --byteskip=2 < foo > bar\n"
 					"etc.\n"
 					,name
 					,name
@@ -74,71 +75,69 @@ static int help_em(const char *name)
 
 int main(int argc, char *argv[])
 {
-	U32 inAddr=0, skipInAmt, skipOutAmt, outAddr=0;
-	int opt, wordSize=8, bytesPerWord, outSize=0, outWritten=0, selByte=0;
+	U32 inSkip=0, outSkip=0, skipInAmt, skipOutAmt;
+	int opt, byteSkip=1, totalOutCount=0, outWritten=0;
 	int fillChr=0, option_index;
 	int len, limit, ifd, ofd;
 	char *endp;
 	const char *inpFile=NULL, *outFile=NULL;
 	FILE *tifp=stdin, *tofp=stdout;
 
-	while ( (opt = getopt_long(argc, argv, "h?",
+	while ( (opt = getopt_long(argc, argv, "i:o:s:S:b:c:f:h?",
 					long_options, &option_index)) != -1 )
 	{
 		switch (opt)
 		{
 		case OPT_IN_FILE:
+		case 'i':
 			inpFile = optarg;
 			break;
 		case OPT_OUT_FILE:
+		case 'o':
 			outFile = optarg;
 			break;
-		case OPT_INADDR:
+		case OPT_IN_SKIP:
+		case 's':
 			endp = NULL;
-			inAddr = strtoul(optarg,&endp,0);
+			inSkip = strtoul(optarg,&endp,0);
 			if ( !endp || *endp )
 			{
-				fprintf(stderr,"Bad --inaddr parameter: '%s'\n", optarg);
+				fprintf(stderr,"Bad --inskip parameter: '%s'\n", optarg);
 				return 1;
 			}
 			break;
-		case OPT_OUTADDR:
+		case OPT_OUT_SKIP:
+		case 'S':
 			endp = NULL;
-			outAddr = strtoul(optarg,&endp,0);
+			outSkip = strtoul(optarg,&endp,0);
 			if ( !endp || *endp )
 			{
-				fprintf(stderr,"Bad --outaddr parameter: '%s'\n", optarg);
+				fprintf(stderr,"Bad --outskip parameter: '%s'\n", optarg);
 				return 1;
 			}
 			break;
-		case OPT_WORD_SIZE:
+		case OPT_BYTE_SKIP:
+		case 'b':
 			endp = NULL;
-			wordSize = strtoul(optarg,&endp,0);
-			if ( !endp || *endp || (wordSize != 8 && wordSize != 16 && wordSize != 24 && wordSize != 32))
+			byteSkip = strtoul(optarg,&endp,0);
+			if ( !endp || *endp || byteSkip < 1 || byteSkip > 4 )
 			{
-				fprintf(stderr,"Bad --word_size parameter: '%s'. Must be one of 8, 16, 24 or 32\n", optarg);
+				fprintf(stderr,"Bad --byteskip parameter: '%s'. Must be one of 1, 2, 3 or 4\n", optarg);
 				return 1;
 			}
 			break;
-		case OPT_BYTE:
+		case OPT_COUNT:
+		case 'c':
 			endp = NULL;
-			selByte = strtoul(optarg,&endp,0);
-			if ( !endp || *endp || selByte < 0 || selByte > 3)
+			totalOutCount = strtoul(optarg,&endp,0);
+			if ( !endp || *endp || totalOutCount < 0)
 			{
-				fprintf(stderr,"Bad --byte parameter: '%s'. Must be one of 0, 1, 2 or 3\n", optarg);
-				return 1;
-			}
-			break;
-		case OPT_OUT_SIZE:
-			endp = NULL;
-			outSize = strtoul(optarg,&endp,0);
-			if ( !endp || *endp )
-			{
-				fprintf(stderr,"Bad --inaddr parameter: '%s'\n", optarg);
+				fprintf(stderr,"Bad --count parameter: '%s'\n", optarg);
 				return 1;
 			}
 			break;
 		case OPT_FILL:
+		case 'f':
 			endp = NULL;
 			fillChr = strtoul(optarg,&endp,0);
 			if ( !endp || *endp || fillChr < -256 || fillChr > 255 )
@@ -157,47 +156,6 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
-	bytesPerWord = wordSize/8;
-	switch (bytesPerWord)
-	{
-	default:
-	case 1:
-		if ( selByte != 0 )
-		{
-			fprintf(stderr,"Option --byte can only be 0 with word_size==8\n");
-			return 1;
-		}
-	case 2:
-		if ( (inAddr&1) )
-		{
-			fprintf(stderr,"Since word_size==16, inAddr must be even\n");
-			return 1;
-		}
-		if ( selByte > 1)
-		{
-			fprintf(stderr,"Option --byte can only be 0 or 1 (for even or odd) with word_size==16\n");
-			return 1;
-		}
-		break;
-	case 3:
-		if ( selByte > 2)
-		{
-			fprintf(stderr,"Option --byte can only be 0, 1 or 2 with word_size==24\n");
-			return 1;
-		}
-		if ( (inAddr&3) )
-			fprintf(stderr,"Warning, Since word_size==24, inAddr probably should be a multiple of 4 to make the --byte option work correctly.\n");
-		break;
-	case 4:
-		if ( (inAddr&3) )
-		{
-			fprintf(stderr,"Since word_size==32, inAddr must be multiple of 4. Select byte with --byte.\n");
-			return 1;
-		}
-		break;
-	}
-	/* Skip any leading input */
-	skipInAmt = inAddr;
 	if ( inpFile )
 	{
 		tifp = fopen(inpFile,"rb");
@@ -232,11 +190,13 @@ int main(int argc, char *argv[])
 #endif
 	ifd = fileno(tifp);
 	ofd = fileno(tofp);
+	/* Skip any leading input */
+	skipInAmt = inSkip;
 	while ( skipInAmt )
 	{
 		limit = sizeof(buff);
 		if ( limit > skipInAmt )
-			limit = inAddr;
+			limit = inSkip;
 		len = read(ifd, buff, limit);
 		if ( len < 0 )
 		{
@@ -245,18 +205,17 @@ int main(int argc, char *argv[])
 		}
 		else if ( len == 0 )
 		{
-			fprintf(stderr,"Reached EOF on input before inaddr 0x%lX\n", inAddr);
+			fprintf(stderr,"Reached EOF on input before inaddr 0x%lX\n", inSkip);
 			return 1;
 		}
 		skipInAmt -= limit;
 	}
 	/* Skip any leading output */
-	skipOutAmt = outAddr;
+	skipOutAmt = outSkip;
 	memset(buff, fillChr, sizeof(buff));
 	while ( skipOutAmt )
 	{
 		limit = sizeof(buff);
-		limit /= bytesPerWord;
 		if ( limit > skipOutAmt )
 			limit = skipOutAmt;
 		len = write(ofd, buff, limit);
@@ -267,7 +226,7 @@ int main(int argc, char *argv[])
 		}
 		skipOutAmt -= limit;
 	}
-	while ( !outSize || (outWritten < outSize) )
+	while ( !totalOutCount || (outWritten < totalOutCount) )
 	{
 		int amtToWrite;
 		
@@ -280,21 +239,26 @@ int main(int argc, char *argv[])
 		}
 		if ( len == 0 )
 			break;
-		amtToWrite = len/bytesPerWord;
-		if ( outSize && (outWritten+amtToWrite > outSize) )
-			amtToWrite = outSize-outWritten;
-		if ( bytesPerWord != 1 )
+		if ( byteSkip != 1 )
 		{
 			int ii;
 			unsigned char *src,*dst;
-			src = buff+selByte;
+			src = buff;
 			dst = buff;
-			for (ii=0; ii < amtToWrite; ++ii)
+			for (ii=0; ii < len; )
 			{
 				*dst++ = *src;
-				src += bytesPerWord;
+				src += byteSkip;
+				ii += byteSkip;
 			}
+			amtToWrite = dst-buff;
 		}
+		else
+		{
+			amtToWrite = len;
+		}
+		if ( totalOutCount && outWritten+amtToWrite > totalOutCount  )
+			amtToWrite = totalOutCount-outWritten;
 		len = write(ofd, buff, amtToWrite);
 		if ( len <= 0 )
 		{
@@ -303,15 +267,15 @@ int main(int argc, char *argv[])
 		}
 		outWritten += len;
 	}
-	if ( outSize && outWritten < outSize )
+	if ( totalOutCount && outWritten < totalOutCount )
 	{
 		memset(buff, fillChr, sizeof(buff));
-		while ( outSize && outWritten < outSize )
+		while ( outWritten < totalOutCount )
 		{
 			limit = sizeof(buff);
-			limit /= bytesPerWord;
-			if ( limit > outSize-outWritten )
-				limit = outSize-outWritten;
+			limit /= byteSkip;
+			if ( limit > totalOutCount-outWritten )
+				limit = totalOutCount-outWritten;
 			len = write(ofd, buff, limit);
 			if ( len <= 0 )
 			{

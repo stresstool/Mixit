@@ -97,7 +97,7 @@ test:
 depends.d : $(ALLDS)
 	
 clean:
-	$(RM) $(A1) $(A2) $(A3) $(A4) mixit.map mixit$(EXE) *.warn *.err
+	$(RM) $(A1) $(A2) $(A3) $(A4) mixit.map mixit$(EXE) splitter$(EXE) *.warn *.err
 
 #mixit.lnt : $(AC1) $(AC2) $(AC3)
 #	sh lint -LARGE -abx -UM_XENIX -DM_I86 -DM_I286 -DMS_DOS $(AC1) $(AC2) $(AC3)
