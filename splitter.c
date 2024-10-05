@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr,"Reached EOF on input before inaddr 0x%lX\n", inSkip);
 			return 1;
 		}
-		skipInAmt -= limit;
+		skipInAmt -= len;
 	}
 	/* Skip any leading output */
 	skipOutAmt = outSkip;
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr,"Error writing %d bytes to stdout: %s\n", limit, strerror(errno));
 			return 1;
 		}
-		skipOutAmt -= limit;
+		skipOutAmt -= len;
 	}
 	while ( !totalOutCount || (outWritten < totalOutCount) )
 	{
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
 				fprintf(stderr,"Error writing %d bytes of fill to stdout: %s\n", limit, strerror(errno));
 				return 1;
 			}
-			outWritten += limit;
+			outWritten += len;
 		}
 	}
 	return 0;
