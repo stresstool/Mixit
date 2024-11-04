@@ -49,6 +49,7 @@
 #endif
 
 #include "mixit.h"
+#include <errno.h>
 
 static int	readRec(InRecord *record);
 static void	send_a_byte(int b, FILE *file, uint *cksum);
@@ -62,51 +63,98 @@ static int readRec(InRecord *record)
 	int cnt;
 	int addrsize = 0;
 	int chksum;
+	int byte0, byte1, skip;
+	GPF *gpf = record->gpfPtr;
+	
 #define HDR_SIZE 4  /* sentinel + count bytes */
 
 	record->recType = REC_UNKNOWN;
 	record->recData = record->recBuf;
 
 	/* Loop until we get record sentinel. */
+	skip = 0;
 	for (;;)
 	{
-		if ( (cnt = getc(record->recFile)) == EOF ||
-			 (len = getc(record->recFile)) == EOF )
+		/* The structure of lda files is the first two bytes of a record are either 1,0 or 2,0 */
+		if ( !skip )
 		{
-			record->recType = feof(record->recFile) ? REC_EOF : REC_ERR;
-			return (0);
-		}
-		if ( len == 0 )
-			switch (cnt)
+			/* Get a byte if don't already have one */
+			if ( (byte0 = getc(record->recFile)) == EOF && feof(record->recFile) )
 			{
-			default:
-				continue;
-
-			case 1:
-				addrsize = 2;
-				break;
-			case 2:
-				addrsize = 4;
-				break;
+				record->recType = REC_EOF;
+				return (0);
 			}
+		}
+		skip = 0;
+		/* check the byte is either a 1 or a 2 */
+		if ( byte0 != 1 && byte0 != 2 )
+		{
+			/* Nope, keep looking */
+			if ( byte0 && !gpf->reportedSkippedBytes )
+			{
+				/* Only squawk about non-zero bytes while searching for sentinel */
+				warn("While looking for a 0x01 0x00 or 0x02 0x00 sentinel, found a 0x%02X, 0x??. Might be a corrupt input file first at offset %ld (0x%X).",
+					 byte0, gpf->recordOffset, gpf->recordOffset);
+				gpf->reportedSkippedBytes = 1;
+			}
+			++gpf->recordOffset;
+			continue;
+		}
+		/* Found one. Now get second byte */
+		byte1 = getc(record->recFile);
+		if ( byte1 != 0 )
+		{
+			/* It is not zero, see if it's maybe an EOF */
+			if ( feof(record->recFile) )
+			{
+				record->recType = REC_EOF;
+				return (0);
+			}
+			/* Not EOF so ignore it (pretend it is byte 0 for the next loop)*/
+			if ( !gpf->reportedSkippedBytes )
+			{
+				/* But squawk about it */
+				warn("While looking for a 0x01 0x00 or 0x02 0x00 sentinel, found a 0x%02X, 0x%02X. Might be a corrupt input file first at offset %ld (0x%X).",
+					 byte0, byte1, gpf->recordOffset, gpf->recordOffset );
+				gpf->reportedSkippedBytes = 1;
+			}
+			skip = 1;
+			byte0 = byte1;
+			++gpf->recordOffset;
+			continue;
+		}
+		/* Now we found the 1,0 or 2,0. */
+		addrsize = 2*byte0;		/* addrsize becomes either a 2 or 4 */
+		/* we're done looking */
 		break;
 	}
-	chksum = cnt;
+	chksum = byte0;
 
 	/* Read 2 bytes of record length. */
-	if ( (cnt = getc(record->recFile)) == EOF ||
-		 (len = getc(record->recFile)) == EOF )
+	if ( (byte0 = getc(record->recFile)) == EOF ||
+		 (byte1 = getc(record->recFile)) == EOF )
 	{
 		record->recType = feof(record->recFile) ? REC_EOF : REC_ERR;
 		return (0);
 	}
-	chksum += cnt;
-	chksum += len;
-	record->recLen = (cnt | (len << 8)) - HDR_SIZE;
-	len = record->recLen + 1 /* chksum byte */;
-	cnt = 0;
+	chksum += byte0;
+	chksum += byte1;
+	record->recLen = (byte0 | (byte1 << 8));
+	if ( record->recLen < HDR_SIZE+addrsize )
+	{
+		moan("Record too short (%d<%d). Probably corrupted input starting at offset: %ld (0x%lX)", record->recLen, HDR_SIZE+addrsize, gpf->recordOffset, gpf->recordOffset);
+		record->recType = REC_ERR;
+		return (0);
+	}
+	record->recLen -= HDR_SIZE;
+	len = record->recLen + 1 /* include chksum byte in data read from disk */;
 	if ( (size_t)len > record->recBufLen )
-		err_exit(__FILE__, __LINE__, "too long (%d>%d)", len, record->recBufLen);
+	{
+		moan("Record too long (%d>%d). Probably corrupted input starting at offset: %ld (0x%lX)", len&0xFFFF, record->recBufLen, gpf->recordOffset, gpf->recordOffset);
+		record->recType = REC_ERR;
+		return (0);
+	}
+	cnt = 0;
 	/*
 	 *  Read the record data.  A loop is used because certain I/O methods
 	 *  with some libraries can return partial length requests.  The new
@@ -122,28 +170,27 @@ static int readRec(InRecord *record)
 		 */
 		if ( ferror(record->recFile) )
 		{
-			moan("Read error");
-			perror(__FILE__);
+			moan("Input file read error at record offset %ld (0x%lX): %s", gpf->recordOffset, gpf->recordOffset, strerror(errno));
+			record->recType = REC_ERR;
+			return (0);
 		}
-		else if ( feof(record->recFile) )
-			moan("Unexpected EOF");
-		else
-			continue;                        /* loop until record finished or error */
-
-		/* Stuff common to both ferror() and feof() errors. */
-		record->recType = REC_ERR;
-		return (0);
+		if ( feof(record->recFile) )
+		{
+			moan("Unexpected EOF at input offset %ld (0x%lX). Probably corrupt input file.", gpf->recordOffset, gpf->recordOffset);
+			record->recType = REC_ERR;
+			return (0);
+		}
 	}
-
 	/* Test checksum. */
 	for ( cnt = 0; cnt < len; ++cnt )
 		chksum += record->recBuf[cnt];
 	if ( byte_of(chksum) )
 	{
-		moan("Bad checksum");
+		moan("Bad checksum in record at offset %ld (0x%lX). Computed 0x%02X, expected 0x00. Probably corrupt input file.", gpf->recordOffset, gpf->recordOffset, byte_of(chksum));
 		record->recType = REC_ERR;
 		return (0);
 	}
+	gpf->recordOffset += HDR_SIZE + len;	/* Advance record offset to next one */
 	return (addrsize);
 } /* end ReadRec */
 

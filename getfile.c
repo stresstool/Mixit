@@ -100,6 +100,9 @@ int getfile(char *fname, GPF *gpf)
 	char        open_opt[] = "rb";
 	
 	memset(&rec,0,sizeof(rec));
+	gpf->recordOffset = 0;
+	gpf->reportedSkippedBytes = 0;
+	rec.gpfPtr = gpf;
 	flag            = gpf->flags;
 	lo              = (flag& GPF_M_START) ? gpf->low_limit : 0;
 	hi              = (flag& GPF_M_END) ? gpf->high_limit  : -1;

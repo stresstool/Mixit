@@ -139,6 +139,7 @@ static int GetHead_cpe(FILE *fp)
 int GetRec_cpe(InRecord *record)
 {
 	int cnt;
+	GPF *gpf = record->gpfPtr;
 
 	record->recData = record->recBuf;
 
@@ -150,6 +151,7 @@ int GetRec_cpe(InRecord *record)
 			return record->recType = REC_ERR;
 		}
 		record->recPrivate = (void *)1;
+		gpf->recordOffset = 4;
 	}
 
 	if ( (cnt = getc(record->recFile)) == EOF )
@@ -160,6 +162,7 @@ int GetRec_cpe(InRecord *record)
 	switch (cnt)
 	{
 	case 0:
+		gpf->recordOffset += 1;
 		return record->recType = REC_EOF;
 	case 1:
 		{
@@ -187,12 +190,14 @@ int GetRec_cpe(InRecord *record)
 			record->recSAddr = addr;
 			record->recEAddr = addr+len-1;
 			record->recLen = len;
+			gpf->recordOffset += 4*2 + len;
 			return record->recType = REC_DATA;
 		}
 	case 2:
 		if ( readl(&record->recSAddr, record->recFile) )
 			goto read_error;
 		record->recLen = 0;
+		gpf->recordOffset += 4;
 		return record->recType = REC_XFER;
 	case 3:
 		{
@@ -201,6 +206,7 @@ int GetRec_cpe(InRecord *record)
 				goto read_error;
 			if ( readl(&record->recSAddr, record->recFile) )
 				goto read_error;
+			gpf->recordOffset += 2+4;
 			if ( reg == 144 )
 			{
 				record->recLen = 0;
@@ -213,29 +219,34 @@ int GetRec_cpe(InRecord *record)
 			goto read_error;
 		if ( readw(0, record->recFile) )
 			goto read_error;
+		gpf->recordOffset += 2+2;
 		break;
 	case 5:
 		if ( readw(0, record->recFile) )
 			goto read_error;
 		if ( fgetc(record->recFile) < 0 )
 			goto read_error;
+		gpf->recordOffset += 2+1;
 		break;
 	case 6:
 		if ( readw(0, record->recFile) )
 			goto read_error;
 		if ( read3(0, record->recFile) )
 			goto read_error;
+		gpf->recordOffset += 2+3;
 		break;
 	case 7:
 		if ( readl(0, record->recFile) )
 			goto read_error;
+		gpf->recordOffset += 4;
 		break;
 	case 8:
 		if ( fgetc(record->recFile) < 0 )
 			goto read_error;
+		gpf->recordOffset += 1;
 		break;
 	default:
-		err_exit(__FILE__, __LINE__, "Unknown record type: %02X(%d)", cnt & 0xFF, cnt & 0xFF);
+		err_exit("cpe.c: Unknown record type: %02X(%d). Infile offset: %ld (0x%lX)", cnt & 0xFF, cnt & 0xFF, gpf->recordOffset, gpf->recordOffset);
 	}
 	return record->recType = REC_UNKNOWN;
 } /* end GetRec_cpe */

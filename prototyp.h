@@ -111,19 +111,19 @@ extern int	PutSym_tekhex(FILE *file, uchar *data, int recsize);
 extern int	PutRec_tekhex(FILE *file, uchar *data, int recsize, ulong recstart);
 
 /* varargs.c */
-extern void	err_exit(char *fmt, ...);
-extern void	ev_exit(int eval, char *fmt, ...);
-extern void	perr_exit(char *fmt, ...);
-extern int	err_return(int ret, char *fmt, ...);
-extern int	perr_return(int ret, char *fmt, ...);
-extern void	moan(char *fmt, ...);
-extern void	warn(char *fmt, ...);
-extern void	info(char *fmt, ...);
-extern void	DBUG(char *fmt, ...);
-extern void	DBUGL(int lvl, char *fmt, ...);
-extern int	getstr(char *result, char *fmt, ...);
-extern int	get_value(int *value, int def, int oklo, int okhi, char *fmt, ...);
-extern void	strucpy(char *d, char *s);
+extern void	err_exit(char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 0)));
+extern void	ev_exit(int eval, char *fmt, ...) __attribute__ ((__format__ (__printf__, 2, 0)));
+extern void	perr_exit(char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 0)));
+extern int	err_return(int ret, char *fmt, ...) __attribute__ ((__format__ (__printf__, 2, 0)));
+extern int	perr_return(int ret, char *fmt, ...) __attribute__ ((__format__ (__printf__, 2, 0)));
+extern void	moan(char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 0)));
+extern void	warn(char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 0)));
+extern void	info(char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 0)));
+extern void	DBUG(char *fmt, ...) __attribute__ ((__format__ (__printf__, 1, 0)));
+extern void	DBUGL(int lvl, char *fmt, ...) __attribute__ ((__format__ (__printf__, 2, 0)));
+extern int	getstr(char *result, char *fmt, ...) __attribute__ ((__format__ (__printf__, 2, 0)));
+extern int	get_value(int *value, int def, int oklo, int okhi, char *fmt, ...) __attribute__ ((__format__ (__printf__, 5, 0)));
+/* extern void	strucpy(char *d, char *s); */
 extern void	uppercase(char *s);
 extern int	lookup_token(char *token, ...);
 

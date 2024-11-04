@@ -75,6 +75,8 @@ typedef struct gpf {
 	ulong   sym_add;        /* symbol table address? */
 	ulong   sym_end;        /* symbol table end? */
 	int		recordNumber;	/* record number on files that have records */
+	ulong	recordOffset;	/* Offset in input file of start of record (not all formats update this) */
+	int		reportedSkippedBytes; /* Unique flag for lda input */
 } GPF;                  /* this whole structure is now a GPF */
 
 extern GPF ingpf, outgpf;

@@ -113,43 +113,48 @@ int perr_return(int ret, char *fmt, ...)
 	return ret;
 } /* end perr_return */
 
+static void generic_msg(const char *title, const char *fmt, va_list ap)
+{
+	char buf[2048];
+	int len;
+
+	len = 0;
+	if ( whatWeAreDoing == DOING_IN_CMD && inspec[0] )
+		len += snprintf(buf+len, sizeof(buf)-len, "%d:%s ", ingpf.recordNumber, inspec);
+	else if ( whatWeAreDoing == DOING_OUTPUT && outspec[0] )
+		len += snprintf(buf+len, sizeof(buf)-len, "%d:%s ", outgpf.recordNumber, outspec);
+	len += snprintf(buf+len,sizeof(buf)-len, "%s: ", title);
+	vsnprintf( buf+len, sizeof(buf)-len, fmt, ap );
+	fputs( buf, errFile );
+	if ( !len || buf[len-1] != '\n' )
+		fputs("\n", errFile);
+	fflush( errFile );
+}
+
 /*==========================================================================*
  | moan -   Prints out the error message described by fmt, then returns.
  *==========================================================================*/
+
 void moan(char *fmt, ...)
 {
 	va_list ap;
-
-	if ( whatWeAreDoing == DOING_IN_CMD && inspec[0] )
-		fprintf(errFile, "%d:%s\n", ingpf.recordNumber, inspec);
-	else if ( whatWeAreDoing == DOING_OUTPUT && outspec[0] )
-		fprintf(errFile, "%d:%s\n", outgpf.recordNumber, outspec);
-	fprintf(errFile, "ERROR: ");
-	va_start( ap, fmt );
-	vfprintf( errFile, fmt, ap );
+	va_start(ap,fmt);
+	generic_msg("ERROR",fmt,ap);
 	va_end(ap);
-	fprintf( errFile, "\n" );
-	fflush( errFile );
-
 } /* end moan */
 
-#if 0
 /*==========================================================================*
  | warn -   Prints out the warning message described by fmt, then returns.
  *==========================================================================*/
 void warn(char *fmt, ...)
 {
 	va_list ap;
-
-	fprintf( errFile, "\nWARNING: " );
-	va_start( ap, fmt );
-	vfprintf( errFile, fmt, ap );
+	va_start(ap,fmt);
+	generic_msg("WARN",fmt,ap);
 	va_end(ap);
-	fprintf( errFile, "\n \n" );
-	fflush( errFile );
-
 } /* end warn */
 
+#if 0
 /*==========================================================================*
  | info -   Prints out the error message described by fmt, then returns.
  *==========================================================================*/

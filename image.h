@@ -79,6 +79,7 @@ typedef struct inrecord
 	size_t		recConvertedLen;
 	int    	 	recType;
 	FILE        *recFile;
+	struct gpf	*gpfPtr;
 	void        *recPrivate;  /* so the GetRec() routines can save some state info */
 } InRecord;
 

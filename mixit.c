@@ -161,7 +161,6 @@ static void incmd(void)
 
 	if ( !getfile(inspec, &ingpf) )
 	{                           /* error message already out 			 */
-		fprintf(errFile, "\n");     /* add a blank line 					 */
 		inspec[0] = savec;          /* restore state of flag 				 */
 		return;
 	}
@@ -305,41 +304,6 @@ int main(int argc, char *argv[])
 	const char *cmdFile=NULL, *testHStr=NULL, *testNStr=NULL;
 	
 	errFile = stderr;
-#if 0
-	--argc;         /* eat the imagename */
-	++argv;
-	while ( argc > 0 )
-	{
-		char *s;
-		s = *argv;
-		if ( *s++ == '-' )  /* command option? */
-		{
-			switch (*s)
-			{
-				case 'q':
-				noisy = 0;
-				break;
-				case 'v':
-				noisy = 1;
-				break;
-				case 'd':
-				debug = 1;
-				break;
-				case 'h':
-				case '?':
-				default:
-				fputs("Usage: mixit [-dqvh?] [command_file[.mix]]\n", errFile);
-				return 1;
-			}
-			--argc;
-			++argv;
-			continue;
-		}
-		break;
-	}
-	if ( argc > 0 )
-		cmdFile = *argv;
-#else
 	while ( (opt = getopt(argc, argv, "evdhnqt:T:v?")) != -1 )
 	{
 		switch (opt)
@@ -407,7 +371,6 @@ int main(int argc, char *argv[])
 	}
 	if ( optind < argc )
 		cmdFile = argv[optind];
-#endif
 	if ( debug )
 		printf("Options ef=%d, noisy=%d, argc=%d, optind=%d, cmdFile=%s\n", ef, noisy, argc, optind, cmdFile ? cmdFile : "<none>" );
 	if ( cmdFile )
